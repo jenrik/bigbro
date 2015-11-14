@@ -19,6 +19,7 @@ fob_pocket_inside_dia = 35
 fob_pocket_inside_h = 5
 fob_pocket_inside_radius = 1
 fob_pocket_thickness = 2
+fob_pocket_displacement = 10
 
 def fob_hole():
     s = sphere(1)
@@ -74,8 +75,12 @@ def card_cover():
     return hull()(left_c+right_c+left_s+right_s)
 
 def assembly():
-    fp = fob_pocket()
-    fh = fob_hole()
+    fp1 = fob_pocket()
+    fp2 = translate([0, fob_pocket_displacement, 0])(fp1)
+    fp = hull()(fp1+fp2)
+    fh1 = fob_hole()
+    fh2 = translate([0, fob_pocket_displacement, 0])(fh1)
+    fh = hull()(fh1+fh2)
     fc = fob_cuts()
     cp = card_pocket()
     cc = card_cover()
