@@ -16,21 +16,22 @@ card_pocket_h = 50
 
 case_w = card_pocket_w+5
 case_h = card_pocket_h+5
-case_d = 15
+case_d = 20
 case_th = 1.5
 coil_sup_l = 3
 coil_sup_d = 3
-coil_sup_w = 40
-coil_sup_h = 30
+# Inner diameter of coil
+coil_sup_w = 43
+coil_sup_h = 31
 
 def coil_sup():
     return cylinder(coil_sup_d/2, coil_sup_l)
 
 def coil_sups():
-    s1 = translate([-coil_sup_w/2, -coil_sup_h/2, 0])(coil_sup())
-    s2 = translate([coil_sup_w/2, -coil_sup_h/2, 0])(coil_sup())
-    s3 = translate([coil_sup_w/2, coil_sup_h/2, 0])(coil_sup())
-    s4 = translate([-coil_sup_w/2, coil_sup_h/2, 0])(coil_sup())
+    s1 = translate([-(coil_sup_w-coil_sup_d/2)/2, -(coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
+    s2 = translate([(coil_sup_w-coil_sup_d/2)/2, -(coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
+    s3 = translate([(coil_sup_w-coil_sup_d/2)/2, (coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
+    s4 = translate([-(coil_sup_w-coil_sup_d/2)/2, (coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
     return s1+s2+s3+s4
 
 def bottom():
