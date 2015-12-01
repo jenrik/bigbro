@@ -28,10 +28,10 @@ def coil_sup():
     return cylinder(coil_sup_d/2, coil_sup_l)
 
 def coil_sups():
-    s1 = translate([-(coil_sup_w-coil_sup_d/2)/2, -(coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
-    s2 = translate([(coil_sup_w-coil_sup_d/2)/2, -(coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
-    s3 = translate([(coil_sup_w-coil_sup_d/2)/2, (coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
-    s4 = translate([-(coil_sup_w-coil_sup_d/2)/2, (coil_sup_h-coil_sup_d/2)/2, 0])(coil_sup())
+    s1 = translate([-(coil_sup_w-coil_sup_d)/2, -(coil_sup_h-coil_sup_d)/2, 0])(coil_sup())
+    s2 = translate([(coil_sup_w-coil_sup_d)/2, -(coil_sup_h-coil_sup_d)/2, 0])(coil_sup())
+    s3 = translate([(coil_sup_w-coil_sup_d)/2, (coil_sup_h-coil_sup_d)/2, 0])(coil_sup())
+    s4 = translate([-(coil_sup_w-coil_sup_d)/2, (coil_sup_h-coil_sup_d*2)/2, 0])(coil_sup())
     return s1+s2+s3+s4
 
 def bottom():
@@ -44,12 +44,20 @@ def frame():
     inner = translate([-iw/2, -ih/2, case_th])(cube([iw, ih, case_d+1]))
     return outer-inner
 
+def screw_support():
+    return cylinder(5, 4)
+
+def screw_hole():
+    return cylinder(2, 6) + cylinder(2, 3, 4)
+
 def assembly():
     bt = bottom()
     cs = up(case_th)(coil_sups())
     fr = frame()
+    ss = screw_support()
+    sh = down(0.1)(screw_hole())
 
-    return cs+fr+bt
+    return cs+fr+bt+ss-sh
 
 if __name__ == '__main__':
     a = assembly()
