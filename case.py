@@ -16,8 +16,8 @@ card_pocket_h = 50
 
 case_w = card_pocket_w+5
 case_h = card_pocket_h+5
-case_d = 20
-case_th = 1.5
+case_d = 25
+case_th = 2
 coil_sup_l = 3
 coil_sup_d = 3
 # Inner diameter of coil
@@ -50,14 +50,31 @@ def screw_support():
 def screw_hole():
     return cylinder(2, 6) + cylinder(2, 3, 4)
 
+switch_offset = -22
+
+def switch_hole():
+    flap_hole = cube([5, 18, 5])
+    return translate([-3, switch_offset, -0.5])(cube([6, 24, 10]) +
+                                    translate([.5, 3, -4.5])(flap_hole))
+
+def switch_mount():
+    return translate([-5, switch_offset+5, 1])(cube([10, 15, 8]))
+
+def screw_hole():
+    return up(case_d-5)(left(5)(rotate([90, 0, 90])(cylinder(r=1.5, h = 10))))
+
 def assembly():
     bt = bottom()
     cs = up(case_th)(coil_sups())
     fr = frame()
-    ss = screw_support()
-    sh = down(0.1)(screw_hole())
 
-    return cs+fr+bt+ss-sh
+    swm = switch_mount()
+    swh = switch_hole()
+    sh1 = translate([-case_w/2, -15, 0])(screw_hole())
+    sh2 = translate([-case_w/2, 15, 0])(screw_hole())
+    sh3 = translate([case_w/2, -15, 0])(screw_hole())
+    sh4 = translate([case_w/2, 15, 0])(screw_hole())
+    return cs+fr+bt + translate([0, 0, 0])(swm) - translate([0, 0, 1])(swh) - sh1 - sh2 - sh3 - sh4
 
 if __name__ == '__main__':
     a = assembly()
