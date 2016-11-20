@@ -54,7 +54,8 @@ switch_offset = -22
 
 def switch_hole():
     flap_hole = cube([5, 18, 5])
-    return translate([-3, switch_offset, -0.5])(cube([6, 24, 10]) +
+    sw_w = 6.25
+    return translate([-sw_w/2, switch_offset, -0.5])(cube([sw_w, 24, 10]) +
                                     translate([.5, 3, -4.5])(flap_hole))
 
 def switch_mount():
@@ -65,7 +66,7 @@ def screw_hole():
 
 def assembly():
     bt = bottom()
-    cs = up(case_th)(coil_sups())
+    cs = up(case_th)(forward(switch_offset/2+5)(coil_sups()))
     fr = frame()
 
     swm = switch_mount()
