@@ -30,7 +30,7 @@ def post():
     post_w = 6
     post_h = 6
     pcb_h = 2
-    nub_d = 1
+    nub_d = 0.5
     offset = 1
     p = translate([-post_w/2, -post_w/2, 0])(cube([post_w, post_w, post_h+offset]))
     slot = translate([0, 0, pcb_h])(cube([post_w, post_w, post_h]))
@@ -38,10 +38,10 @@ def post():
     return p-slot+nub
 
 def rfid_sups():
-    return pcb_sup(18, 39)
+    return pcb_sup(18.5, 39.5)
 
 def ardu_sups():
-    return pcb_sup(18, 43.5)
+    return pcb_sup(18.5, 44)
 
 def pcb_sup(w, l):
     s1 = translate([-w/2, -l/2, 0])(post())
