@@ -11,7 +11,7 @@ from solid.utils import *
 
 SEGMENTS = 32
 
-card_pocket_w = 56
+card_pocket_w = 54
 card_pocket_h = 50
 card_pocket_d = 1.5
 
