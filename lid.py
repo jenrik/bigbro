@@ -16,13 +16,14 @@ card_pocket_h = 50
 
 case_w = card_pocket_w+5
 case_h = card_pocket_h+5
-case_th = 1.5
+case_th = 2
+
+epsilon = 0.5
 
 def lid_top():
     return cube([case_w, case_h, case_th], center=True)
 
 def lid_bottom():
-    epsilon = 0.5
     return cube([case_w-2*case_th-epsilon, case_h-2*case_th-epsilon, case_th], center=True)
 
 def post():
@@ -39,8 +40,8 @@ def post():
 def rfid_sups():
     return pcb_sup(18, 39)
 
-def rs422_sups():
-    return pcb_sup(14, 44.5)
+def ardu_sups():
+    return pcb_sup(18, 43.5)
 
 def pcb_sup(w, l):
     s1 = translate([-w/2, -l/2, 0])(post())
@@ -49,16 +50,18 @@ def pcb_sup(w, l):
     s4 = translate([w/2, l/2, 0])(mirror([1, 0, 0])(rotate([0, 0, 270])(post())))
     return s1+s2+s3+s4
 
-def screw_holder():
-    return cylinder(3, 15) - up(1)(cylinder(1.5, 16))
+def side():
+    h = case_h-(case_th+epsilon)*2
+    return translate([0, -h/2, case_th-epsilon])(cube([2, h, 7]))
 
 def assembly():
     lt = lid_top()
     lb = up(case_th)(lid_bottom())
     rfs = translate([case_w/4, 0, case_th*2-1])(rfid_sups())
-    r4s = translate([-case_w/4, 0, case_th*2-1])(rs422_sups())
-    sh = up(case_th-1)(screw_holder())
-    return lt+lb+rfs+r4s+sh
+    r4s = translate([-case_w/4, 0, case_th*2-1])(ardu_sups())
+    s1 = translate([-case_w/2+case_th+epsilon/2, 0, 0])(side())
+    s2 = translate([case_w/2-case_th-epsilon/2-2, 0, 0])(side())
+    return lt+lb+rfs+r4s+s1+s2
 
 if __name__ == '__main__':
     a = assembly()
