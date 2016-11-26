@@ -52,7 +52,7 @@ def pcb_sup(w, l):
 
 def side():
     h = case_h-(case_th+epsilon)*2
-    return translate([0, -h/2, case_th-epsilon])(cube([2, h, 7]))
+    return translate([0, -h/2, case_th-epsilon])(cube([2, h, 10]))
 
 def assembly():
     lt = lid_top()
