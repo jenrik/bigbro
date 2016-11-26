@@ -62,8 +62,8 @@ def half_cylinder(r):
                                             down(r-1)(left(r)(cube([r*2,r*2,r*2])))))
 
 def card_cover():
-    d = 2
-    r = 3
+    d = 3
+    r = 4
     card_cover_w = card_pocket_w+2*d
     card_cover_d = card_pocket_d+d
     
