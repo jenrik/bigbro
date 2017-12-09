@@ -42,7 +42,7 @@ void setup()
     display.set_status(s.c_str());
 
     // Connect to WiFi network
-    wifi_handler.init(rgb_led);
+    wifi_handler.init(rgb_led, display);
 }
 
 RDM6300 decoder;

@@ -1,6 +1,7 @@
 #include "display.h"
 
-#define STATUS_Y    30
+#define Y_1    20
+#define Y_2    40
 
 Display::Display()
 {
@@ -19,10 +20,23 @@ void Display::set_machine_id(const char* id)
     m_machine_id = id;
 }
 
+void Display::set_network_status(const char* status)
+{
+    m_network_status = status;
+    update();
+}
+
 void Display::set_status(const char* status)
+{
+    m_status = status;
+    update();
+}
+
+void Display::update()
 {
     m_display->clearBuffer();
     m_display->drawStr(0, 0, m_machine_id.c_str());
-    m_display->drawStr(0, STATUS_Y, status);
+    m_display->drawStr(0, Y_1, m_network_status.c_str());
+    m_display->drawStr(0, Y_2, m_status.c_str());
     m_display->sendBuffer();
 }

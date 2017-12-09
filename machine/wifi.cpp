@@ -1,13 +1,15 @@
 #include "wifi.h"
 
 #include "eeprom.h"
+#include "display.h"
 #include "led.h"
 
 WiFiHandler::WiFiHandler()
 {
 }
 
-void WiFiHandler::init(AbstractLed& led)
+void WiFiHandler::init(AbstractLed& led,
+                       Display& disp)
 {
     led.set_colour(CRGB::Orange);
     led.set_duty_cycle(10);
@@ -21,8 +23,10 @@ void WiFiHandler::init(AbstractLed& led)
         Serial.println();
         Serial.println();
         const auto ssid = Eeprom::get_ssid(index);
-        Serial.print("Trying to connect to ");
-        Serial.println(ssid);
+        String s = "Trying ";
+        s += ssid;
+        disp.set_network_status(s.c_str());
+        Serial.println(s);
 
         WiFi.begin(ssid, Eeprom::get_password(index));
         led.update();
@@ -42,6 +46,7 @@ void WiFiHandler::init(AbstractLed& led)
         }
         if (connected)
         {
+            disp.set_network_status("Online");
             Serial.println("");
             Serial.print("Connected to ");
             Serial.println(ssid);
