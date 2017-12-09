@@ -2,15 +2,11 @@
 
 #include <RDM6300.h>
 #include <SoftwareSerial.h>
-#include <FastLED.h>
-#include <U8g2lib.h>
 
-#ifdef U8X8_HAVE_HW_SPI
-#include <SPI.h>
-#endif
-#ifdef U8X8_HAVE_HW_I2C
-#include <Wire.h>
-#endif
+#include "display.h"
+#include "eeprom.h"
+#include "led.h"
+#include "wifi.h"
 
 const char* VERSION = "0.0.1";
 
@@ -21,20 +17,16 @@ const char* VERSION = "0.0.1";
 #define PIN_LED      13
 #define PIN_RELAY    15
 
-#define STATUS_Y    30
-
 SoftwareSerial swSerial(PIN_RX, PIN_TX);
 
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R0, U8X8_PIN_NONE);
+Display display;
 
-CRGB rgb_led;
+Led<PIN_LED> rgb_led;
 
-int sequence_len = 100;
-int sequence_index = 0;
-int sequence_period = 10;
-int delay_counter = 0;
+WiFiHandler wifi_handler;
 
-String machine_id = "Royal"; //!!
+unsigned long start_tick = millis();
+bool showing_version = true;
 
 void setup()
 {
@@ -44,24 +36,13 @@ void setup()
     Serial.println(VERSION);
     swSerial.begin(9600);
 
-    display.begin();
-    display.setDrawColor(1);
-    display.setFont(u8g2_font_7x14B_mr);
-    display.setFontRefHeightExtendedText();
-    display.setFontPosTop();
-    display.setFontDirection(0);
-    display.drawStr(0, 0, "Version");
-    display.drawStr(15, 0, VERSION);
-    display.sendBuffer();
-    delay(1000);
+    display.set_machine_id(Eeprom::get_machine_id());
+    String s = "Version ";
+    s += VERSION;
+    display.set_status(s.c_str());
 
-    FastLED.addLeds<WS2811, PIN_LED, GRB>(&rgb_led, 1).setCorrection(TypicalLEDStrip);
-    rgb_led.r = 255;
-    FastLED.show();
-
-    display.clearBuffer();
-    display.drawStr(0, 0, machine_id.c_str());
-    display.sendBuffer();
+    // Connect to WiFi network
+    wifi_handler.init(rgb_led);
 }
 
 RDM6300 decoder;
@@ -89,10 +70,7 @@ void loop()
 #if SERIAL_DBG
                 Serial.println("Saved");
 #endif
-                display.clearBuffer();
-                display.drawStr(0, 0, machine_id.c_str());
-                display.drawStr(0, STATUS_Y, "Card present");
-                display.sendBuffer();
+                display.set_status("Card present");
             }
 #if SERIAL_DBG
             else
@@ -115,23 +93,13 @@ void loop()
         else
         {
             current_id = "";
-            display.clearBuffer();
-            display.drawStr(0, 0, machine_id.c_str());
-            display.drawStr(0, STATUS_Y, "No card");
-            display.sendBuffer();
+            if (!showing_version)
+                display.set_status("No card");
         }
     }
+    if (now - start_tick > 5000)
+        showing_version = false;
 
     delay(1);
-    if (++delay_counter < sequence_period)
-        return;
-    delay_counter = 0;
-
-    if (++sequence_index >= sequence_len)
-        sequence_index = 0;
-    if (sequence_index < 1)
-        rgb_led = CRGB::Green;
-    else
-        rgb_led = CRGB::Black;
-    FastLED.show();
+    rgb_led.update();
 }
