@@ -1,6 +1,11 @@
+// Libraries:
+// https://github.com/DaKaZ/esp8266-restclient
+// https://github.com/plerup/espsoftwareserial
+
 #define SERIAL_DBG  0
 
 #include <RestClient.h>
+#include <ArduinoJson.h>
 
 #include "cardreader.h"
 #include "display.h"
@@ -17,10 +22,12 @@ const char* VERSION = "0.0.1";
 #define PIN_LED      13
 #define PIN_RELAY    15
 
+#define SERVER "192.168.0.45"
+#define USE_SSL 0
 
 Display display;
 
-Led<PIN_LED> rgb_led;
+Led<PIN_LED> led;
 
 WiFiHandler wifi_handler;
 
@@ -40,7 +47,7 @@ void setup()
     display.set_status(s.c_str());
 
     // Connect to WiFi network
-    wifi_handler.init(rgb_led, display);
+    wifi_handler.init(led, display);
 }
 
 CardReader reader(PIN_RX, PIN_TX, PIN_SWITCH);
@@ -57,14 +64,62 @@ void loop()
         if (card_id.length())
         {
             display.set_status("Card present");
-            RestClient client("192.168.0.", 5000);
-    
+            StaticJsonBuffer<200> jsonBuffer;
+            auto& root = jsonBuffer.createObject();
+            root["api_token"] = Eeprom::get_api_token();
+            root["card_id"] = card_id;
+            String s;
+            root.printTo(s);
+            // Work around RestClient bug
+            s = String("\r\n") + s;
+            RestClient client(SERVER, 80, USE_SSL);
+            client.setContentType("application/json");
+            String resp;
+            display.set_status("Querying...");
+            auto status = client.post("/api/v1/permissions", s.c_str(), &resp);
+            if (status != 200)
+                display.set_status("Bad reply");
+            else
+            {
+                // Remove garbage (why is it there?)
+                int i = 0;
+                while ((resp[i] != '{') && (i < resp.length()))
+                    ++i;
+                int j = i;
+                while ((resp[j] != '}') && (j < resp.length()))
+                    ++j;
+                resp = resp.substring(i, j+1);
+                auto& json_resp = jsonBuffer.parseObject(resp);
+                if (!json_resp.success())
+                    display.set_status("Bad JSON");
+                else
+                {
+                    bool allowed = json_resp["allowed"];
+                    const char* name = json_resp["name"];
+                    String name_trunc = name;
+                    if (name_trunc.length() > 16)
+                        name_trunc = name_trunc.substring(0, 12);
+                    display.set_status(name_trunc.c_str(),
+                                       allowed ? "OK" : "Denied");
+                    digitalWrite(PIN_RELAY, 1);
+                    if (allowed)
+                        led.set_colour(CRGB::Green);
+                    else
+                        led.set_colour(CRGB::Red);
+                    led.set_duty_cycle(100);
+                }
+            }
         }
-        else
-        {
-            if (!showing_version)
-                display.set_status("No card");
-        }
+    }
+
+    if (!card_id.length())
+    {
+        if (!showing_version)
+            display.set_status("No card");
+        digitalWrite(PIN_RELAY, 0);
+        led.set_colour(CRGB::Green);
+        led.set_duty_cycle(1);
+        led.set_period(10);
     }
 
     const auto now = millis();
@@ -72,5 +127,5 @@ void loop()
         showing_version = false;
 
     delay(1);
-    rgb_led.update();
+    led.update();
 }
