@@ -1,7 +1,8 @@
 #include "display.h"
 
-#define Y_1    20
-#define Y_2    40
+#define Y_1    15
+#define Y_2    30
+#define Y_3    45
 
 Display::Display()
 {
@@ -26,10 +27,18 @@ void Display::set_network_status(const char* status)
     update();
 }
 
-void Display::set_status(const char* status)
+void Display::set_status(const char* line1,
+                         const char* line2)
 {
-    m_status = status;
+    m_line1 = line1;
+    m_line2 = line2;
     update();
+}
+
+void Display::set_status(const String& line1,
+                         const String& line2)
+{
+    set_status(line1.c_str(), line2.c_str());
 }
 
 void Display::update()
@@ -37,6 +46,7 @@ void Display::update()
     m_display->clearBuffer();
     m_display->drawStr(0, 0, m_machine_id.c_str());
     m_display->drawStr(0, Y_1, m_network_status.c_str());
-    m_display->drawStr(0, Y_2, m_status.c_str());
+    m_display->drawStr(0, Y_2, m_line1.c_str());
+    m_display->drawStr(0, Y_3, m_line2.c_str());
     m_display->sendBuffer();
 }
