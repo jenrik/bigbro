@@ -44,7 +44,7 @@ void setup()
     display.set_machine_id(Eeprom::get_machine_id());
     String s = "Version ";
     s += VERSION;
-    display.set_status(s.c_str());
+    display.set_status(s);
 
     // Connect to WiFi network
     wifi_handler.init(led, display);
@@ -77,9 +77,8 @@ void loop()
             String resp;
             display.set_status("Querying...");
             auto status = client.post("/api/v1/permissions", s.c_str(), &resp);
-            if (status != 200)
-                display.set_status("Bad reply");
-            else
+            led.update();
+            if (status == 200)
             {
                 // Remove garbage (why is it there?)
                 int i = 0;
@@ -91,7 +90,11 @@ void loop()
                 resp = resp.substring(i, j+1);
                 auto& json_resp = jsonBuffer.parseObject(resp);
                 if (!json_resp.success())
+                {
+                    Serial.println("Bad JSON:");
+                    Serial.println(resp);
                     display.set_status("Bad JSON");
+                }
                 else
                 {
                     bool allowed = json_resp["allowed"];
@@ -99,7 +102,7 @@ void loop()
                     String name_trunc = name;
                     if (name_trunc.length() > 16)
                         name_trunc = name_trunc.substring(0, 12);
-                    display.set_status(name_trunc.c_str(),
+                    display.set_status(name_trunc,
                                        allowed ? "OK" : "Denied");
                     digitalWrite(PIN_RELAY, 1);
                     if (allowed)
@@ -107,7 +110,18 @@ void loop()
                     else
                         led.set_colour(CRGB::Red);
                     led.set_duty_cycle(100);
+                    led.update();
+                    //!! log
                 }
+            }
+            else if (status == 404)
+                // Unknown card
+                display.set_status("Unknown card:", card_id);
+            else
+            {
+                String s = "Bad reply: ";
+                s += String(status);
+                display.set_status(s);
             }
         }
     }
