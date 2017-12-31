@@ -10,4 +10,6 @@ public:
     static const char* get_password(int index);
 
     static const char* get_machine_id();
+
+    static const char* get_api_token();
 };

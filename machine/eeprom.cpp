@@ -6,9 +6,12 @@ const char* machine_id = "Royal";
 
 const char* ssids[] = {
     "hal9k",
-    "bullestock-guest"
+    "bullestock-primary"
 };
-const char* password = "";
+const char* passwords[] = {
+    "",
+    "secret"
+};
 
 int Eeprom::get_nof_ssids()
 {
@@ -22,10 +25,15 @@ const char* Eeprom::get_ssid(int index)
 
 const char* Eeprom::get_password(int index)
 {
-    return password;
+    return passwords[index];
 }
 
 const char* Eeprom::get_machine_id()
 {
     return machine_id;
+}
+
+const char* Eeprom::get_api_token()
+{
+    return "verysecret";
 }
