@@ -19,6 +19,7 @@ Display::Display()
 void Display::set_machine_id(const char* id)
 {
     m_machine_id = id;
+    update();
 }
 
 void Display::set_network_status(const char* status)
