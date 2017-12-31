@@ -4,9 +4,9 @@
 
 #define SERIAL_DBG  0
 
-#include <RestClient.h>
 #include <ArduinoJson.h>
 
+#include "acsrestclient.h"
 #include "cardreader.h"
 #include "display.h"
 #include "eeprom.h"
@@ -21,9 +21,6 @@ const char* VERSION = "0.0.1";
 #define PIN_SWITCH   12
 #define PIN_LED      13
 #define PIN_RELAY    15
-
-#define SERVER "192.168.0.45"
-#define USE_SSL 0
 
 Display display;
 
@@ -64,22 +61,17 @@ void loop()
         if (card_id.length())
         {
             display.set_status("Card present");
+            AcsRestClient rc("permissions");
             StaticJsonBuffer<200> jsonBuffer;
             auto& root = jsonBuffer.createObject();
             root["api_token"] = Eeprom::get_api_token();
             root["card_id"] = card_id;
-            String s;
-            root.printTo(s);
-            // Work around RestClient bug
-            s = String("\r\n") + s;
-            RestClient client(SERVER, 80, USE_SSL);
-            client.setContentType("application/json");
-            String resp;
             display.set_status("Querying...");
-            auto status = client.post("/api/v1/permissions", s.c_str(), &resp);
+            const auto status = rc.post(root);
             led.update();
             if (status == 200)
             {
+                auto resp = rc.get_response();
                 // Remove garbage (why is it there?)
                 int i = 0;
                 while ((resp[i] != '{') && (i < resp.length()))
@@ -99,6 +91,7 @@ void loop()
                 {
                     bool allowed = json_resp["allowed"];
                     const char* name = json_resp["name"];
+                    auto user_id = json_resp["id"];
                     String name_trunc = name;
                     if (name_trunc.length() > 16)
                         name_trunc = name_trunc.substring(0, 12);
@@ -111,7 +104,23 @@ void loop()
                         led.set_colour(CRGB::Red);
                     led.set_duty_cycle(100);
                     led.update();
-                    //!! log
+                    AcsRestClient logger("logs");
+                    StaticJsonBuffer<200> jsonBuffer;
+                    auto& root = jsonBuffer.createObject();
+                    root["api_token"] = Eeprom::get_api_token();
+                    auto& log = root.createNestedObject("log");
+                    log["user_id"] = user_id;
+                    if (allowed)
+                        log["message"] = "Successful machine access";
+                    else
+                        log["message"] = "Machine access denied";
+                    const auto status = logger.post(root);
+                    if (status != 200)
+                    {
+                        String s = "Bad HTTP log reply:";
+                        s += String(status);
+                        display.set_status(s);
+                    }
                 }
             }
             else if (status == 404)
@@ -119,7 +128,7 @@ void loop()
                 display.set_status("Unknown card:", card_id);
             else
             {
-                String s = "Bad reply: ";
+                String s = "Bad HTTP reply:";
                 s += String(status);
                 display.set_status(s);
             }
