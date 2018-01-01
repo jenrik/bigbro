@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 class Eeprom
 {
 public:
@@ -9,7 +11,9 @@ public:
 
     static const char* get_password(int index);
 
-    static const char* get_machine_id();
+    static String get_machine_id();
+    static void set_machine_id(const char*);
 
-    static const char* get_api_token();
+    static String get_api_token();
+    static void set_api_token(const char*);
 };

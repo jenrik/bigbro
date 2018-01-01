@@ -5,6 +5,7 @@
 #define SERIAL_DBG  0
 
 #include <ArduinoJson.h>
+#include <EEPROM.h>
 
 #include "acsrestclient.h"
 #include "cardreader.h"
@@ -13,7 +14,7 @@
 #include "led.h"
 #include "wifi.h"
 
-const char* VERSION = "0.0.1";
+const char* VERSION = "0.1.0";
 
 // TX is not connected
 #define PIN_TX       11
@@ -35,10 +36,13 @@ void setup()
 {
     delay(1000);
     Serial.begin(115200);
-    Serial.print("Cardreader v ");
+    Serial.print("Machine v ");
     Serial.println(VERSION);
 
-    display.set_machine_id(Eeprom::get_machine_id());
+    // We need room for machine name (not more than 20 bytes) and API token (64 bytes)
+    EEPROM.begin(128);
+
+    display.set_machine_id(Eeprom::get_machine_id().c_str());
     String s = "Version ";
     s += VERSION;
     display.set_status(s);
@@ -49,6 +53,35 @@ void setup()
 
 CardReader reader(PIN_RX, PIN_TX, PIN_SWITCH);
 String last_card_id;
+
+void decode_line(const char* line)
+{
+    int i = 0;
+    switch (tolower(line[i]))
+    {
+    case 'k':
+        // Set API token
+        Eeprom::set_api_token(line+1);
+        Serial.println("API token set");
+        return;
+
+    case 'm':
+        // Set machine ID
+        Eeprom::set_machine_id(line+1);
+        Serial.println("Machine ID set");
+        display.set_machine_id(Eeprom::get_machine_id().c_str());
+        return;
+
+    default:
+        Serial.print("Unknown command: ");
+        Serial.println(line);
+        return;
+    }
+}
+
+const int MAX_LINE_LENGTH = 80;
+char line[MAX_LINE_LENGTH+1];
+int line_len = 0;
 
 void loop()
 {
@@ -80,6 +113,7 @@ void loop()
                 while ((resp[j] != '}') && (j < resp.length()))
                     ++j;
                 resp = resp.substring(i, j+1);
+                StaticJsonBuffer<200> jsonBuffer;
                 auto& json_resp = jsonBuffer.parseObject(resp);
                 if (!json_resp.success())
                 {
@@ -151,4 +185,25 @@ void loop()
 
     delay(1);
     led.update();
+
+    if (Serial.available())
+    {
+        const char c = Serial.read();
+        if ((c == '\r') || (c == '\n'))
+        {
+            line[line_len] = 0;
+            line_len = 0;
+            decode_line(line);
+        }
+        else if (line_len < MAX_LINE_LENGTH)
+            line[line_len++] = c;
+        else
+        {
+            Serial.print("Line too long: ");
+            Serial.println(line);
+            line_len = 0;
+        }
+    }
+
+
 }

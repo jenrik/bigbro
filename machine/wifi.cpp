@@ -46,7 +46,8 @@ void WiFiHandler::init(AbstractLed& led,
         }
         if (connected)
         {
-            disp.set_network_status("Online");
+            const auto token = Eeprom::get_api_token();
+            disp.set_network_status(token.length() ? "Online" : "(online)");
             Serial.println("");
             Serial.print("Connected to ");
             Serial.println(ssid);
