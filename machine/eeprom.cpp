@@ -8,12 +8,10 @@ const int API_TOKEN_OFFSET = MACHINE_ID_SIZE;
 const int API_TOKEN_SIZE = 80;
 
 const char* ssids[] = {
-    "hal9k",
-    "bullestock-primary"
+    "hal9k"
 };
 const char* passwords[] = {
-    "",
-    "secret"
+    ""
 };
 
 int Eeprom::get_nof_ssids()
