@@ -2,8 +2,8 @@
 
 #include <RestClient.h>
 
-#define SERVER "192.168.0.45"
-#define USE_SSL 0
+#define SERVER "panopticon.hal9k.dk"
+#define USE_SSL 1
 
 AcsRestClient::AcsRestClient(const char* p)
     : path(p)
@@ -16,7 +16,7 @@ int AcsRestClient::post(const JsonObject& obj)
     obj.printTo(s);
     // Work around RestClient bug
     s = String("\r\n") + s;
-    RestClient client(SERVER, 80, USE_SSL);
+    RestClient client(SERVER, USE_SSL ? 443 : 80, USE_SSL);
     client.setContentType("application/json");
     String url("/api/v1/");
     url += path;
