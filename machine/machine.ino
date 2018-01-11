@@ -144,6 +144,9 @@ bool query_permission(const String& card_id,
         }
         return true;
     }
+    String s = "Bad HTTP reply:";
+    s += String(status);
+    message = s;
     return false;
 }
 
@@ -201,12 +204,6 @@ void loop()
             else if (status == 404)
                 // Unknown card
                 display.set_status("Unknown card:", card_id);
-            else
-            {
-                String s = "Bad HTTP reply:";
-                s += String(status);
-                display.set_status(s);
-            }
         }
     }
 
