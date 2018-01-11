@@ -72,6 +72,25 @@ void decode_line(const char* line)
         display.set_machine_id(Eeprom::get_machine_id().c_str());
         return;
 
+    case 't':
+        {
+            Serial.println("Sending test request");
+            String message, user_name;
+            bool allowed = false;
+            int user_id = 0;
+            if (!query_permission("0000BB96C5", allowed, user_name, user_id, message))
+            {
+                Serial.print("Error: ");
+                Serial.println(message);
+            }
+            else
+            {
+                Serial.print("Success: User ");
+                Serial.println(user_name);
+            }
+        }
+        break;
+
     default:
         Serial.print("Unknown command: ");
         Serial.println(line);
@@ -82,6 +101,51 @@ void decode_line(const char* line)
 const int MAX_LINE_LENGTH = 80;
 char line[MAX_LINE_LENGTH+1];
 int line_len = 0;
+
+bool query_permission(const String& card_id,
+                      bool& allowed,
+                      String& user_name,
+                      int& user_id,
+                      String& message)
+{
+    AcsRestClient rc("permissions");
+    StaticJsonBuffer<200> jsonBuffer;
+    auto& root = jsonBuffer.createObject();
+    root["api_token"] = Eeprom::get_api_token();
+    root["card_id"] = card_id;
+    const auto status = rc.post(root);
+    led.update();
+    Serial.print("HTTP status ");
+    Serial.println(status);
+    if (status == 200)
+    {
+        auto resp = rc.get_response();
+        // Remove garbage (why is it there?)
+        int i = 0;
+        while ((resp[i] != '{') && (i < resp.length()))
+            ++i;
+        int j = i;
+        while ((resp[j] != '}') && (j < resp.length()))
+            ++j;
+        resp = resp.substring(i, j+1);
+        StaticJsonBuffer<200> jsonBuffer;
+        auto& json_resp = jsonBuffer.parseObject(resp);
+        if (!json_resp.success())
+        {
+            Serial.println("Bad JSON:");
+            Serial.println(resp);
+            message = "Bad JSON";
+        }
+        else
+        {
+            allowed = json_resp["allowed"];
+            user_name = (const char*) json_resp["name"];
+            user_id = json_resp["id"];
+        }
+        return true;
+    }
+    return false;
+}
 
 void loop()
 {
@@ -94,68 +158,45 @@ void loop()
         if (card_id.length())
         {
             display.set_status("Card present");
-            AcsRestClient rc("permissions");
+            String message, user_name;
+            bool allowed = false;
+            int user_id = 0;
+            if (!query_permission(card_id, allowed, user_name, user_id, message))
+                display.set_status(message);
+            else
+            {
+                if (allowed)
+                {
+                    digitalWrite(PIN_RELAY, 1);
+                    led.set_colour(CRGB::Green);
+                }
+                else
+                    led.set_colour(CRGB::Red);
+            }
+            led.set_duty_cycle(100);
+            led.update();
+            String name_trunc = user_name;
+            if (name_trunc.length() > 16)
+                name_trunc = name_trunc.substring(0, 12);
+            display.set_status(name_trunc,
+                               allowed ? "OK" : "Denied");
+
+            AcsRestClient logger("logs");
             StaticJsonBuffer<200> jsonBuffer;
             auto& root = jsonBuffer.createObject();
             root["api_token"] = Eeprom::get_api_token();
-            root["card_id"] = card_id;
-            display.set_status("Querying...");
-            const auto status = rc.post(root);
-            led.update();
-            if (status == 200)
+            auto& log = root.createNestedObject("log");
+            log["user_id"] = user_id;
+            if (allowed)
+                log["message"] = "Successful machine access";
+            else
+                log["message"] = "Machine access denied";
+            const auto status = logger.post(root);
+            if (status != 200)
             {
-                auto resp = rc.get_response();
-                // Remove garbage (why is it there?)
-                int i = 0;
-                while ((resp[i] != '{') && (i < resp.length()))
-                    ++i;
-                int j = i;
-                while ((resp[j] != '}') && (j < resp.length()))
-                    ++j;
-                resp = resp.substring(i, j+1);
-                StaticJsonBuffer<200> jsonBuffer;
-                auto& json_resp = jsonBuffer.parseObject(resp);
-                if (!json_resp.success())
-                {
-                    Serial.println("Bad JSON:");
-                    Serial.println(resp);
-                    display.set_status("Bad JSON");
-                }
-                else
-                {
-                    bool allowed = json_resp["allowed"];
-                    const char* name = json_resp["name"];
-                    auto user_id = json_resp["id"];
-                    String name_trunc = name;
-                    if (name_trunc.length() > 16)
-                        name_trunc = name_trunc.substring(0, 12);
-                    display.set_status(name_trunc,
-                                       allowed ? "OK" : "Denied");
-                    digitalWrite(PIN_RELAY, 1);
-                    if (allowed)
-                        led.set_colour(CRGB::Green);
-                    else
-                        led.set_colour(CRGB::Red);
-                    led.set_duty_cycle(100);
-                    led.update();
-                    AcsRestClient logger("logs");
-                    StaticJsonBuffer<200> jsonBuffer;
-                    auto& root = jsonBuffer.createObject();
-                    root["api_token"] = Eeprom::get_api_token();
-                    auto& log = root.createNestedObject("log");
-                    log["user_id"] = user_id;
-                    if (allowed)
-                        log["message"] = "Successful machine access";
-                    else
-                        log["message"] = "Machine access denied";
-                    const auto status = logger.post(root);
-                    if (status != 200)
-                    {
-                        String s = "Bad HTTP log reply:";
-                        s += String(status);
-                        display.set_status(s);
-                    }
-                }
+                String s = "Bad HTTP log reply:";
+                s += String(status);
+                display.set_status(s);
             }
             else if (status == 404)
                 // Unknown card
