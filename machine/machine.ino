@@ -59,15 +59,26 @@ void decode_line(const char* line)
     int i = 0;
     switch (tolower(line[i]))
     {
+    case 'h':
+        Serial.println("Commands:");
+        Serial.println("  k  Set API token");
+        Serial.println("  m  Set machine ID");
+        Serial.println("  t  Send test request");
+        break;
+        
     case 'k':
         // Set API token
-        Eeprom::set_api_token(line+1);
+        while (line[++i] == ' ')
+            ;
+        Eeprom::set_api_token(line+i);
         Serial.println("API token set");
         return;
 
     case 'm':
         // Set machine ID
-        Eeprom::set_machine_id(line+1);
+        while (line[++i] == ' ')
+            ;
+        Eeprom::set_machine_id(line+i);
         Serial.println("Machine ID set");
         display.set_machine_id(Eeprom::get_machine_id().c_str());
         return;
@@ -144,6 +155,12 @@ bool query_permission(const String& card_id,
         }
         return true;
     }
+    else if (status == 404)
+    {
+        message = "Unknown card";
+        allowed = false;
+        return true;
+    }
     String s = "Bad HTTP reply:";
     s += String(status);
     message = s;
@@ -152,6 +169,7 @@ bool query_permission(const String& card_id,
 
 void loop()
 {
+    yield();
     reader.update();
     
     const auto card_id = reader.get_card_id();
@@ -160,7 +178,9 @@ void loop()
         last_card_id = card_id;
         if (card_id.length())
         {
+            Serial.println("Card present");
             display.set_status("Card present");
+            yield();
             String message, user_name;
             bool allowed = false;
             int user_id = 0;
@@ -176,16 +196,18 @@ void loop()
                 else
                     led.set_colour(CRGB::Red);
             }
+            yield();
             led.set_duty_cycle(100);
             led.update();
             String name_trunc = user_name;
-            if (name_trunc.length() > 16)
-                name_trunc = name_trunc.substring(0, 12);
+            if (name_trunc.length() > 12)
+                name_trunc = name_trunc.substring(0, 12) + String("...");
             display.set_status(name_trunc,
                                allowed ? "OK" : "Denied");
 
             AcsRestClient logger("logs");
             StaticJsonBuffer<200> jsonBuffer;
+            yield();
             auto& root = jsonBuffer.createObject();
             root["api_token"] = Eeprom::get_api_token();
             auto& log = root.createNestedObject("log");
@@ -195,6 +217,7 @@ void loop()
             else
                 log["message"] = "Machine access denied";
             const auto status = logger.post(root);
+            yield();
             if (status != 200)
             {
                 String s = "Bad HTTP log reply:";
@@ -204,6 +227,7 @@ void loop()
             else if (status == 404)
                 // Unknown card
                 display.set_status("Unknown card:", card_id);
+            yield();
         }
     }
 
@@ -223,9 +247,11 @@ void loop()
 
     delay(1);
     led.update();
+    yield();
 
     if (Serial.available())
     {
+        yield();
         const char c = Serial.read();
         if ((c == '\r') || (c == '\n'))
         {
@@ -242,6 +268,4 @@ void loop()
             line_len = 0;
         }
     }
-
-
 }
