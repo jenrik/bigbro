@@ -14,7 +14,7 @@
 #include "led.h"
 #include "wifi.h"
 
-const char* VERSION = "0.1.0";
+const char* VERSION = "0.1.1";
 
 // TX is not connected
 #define PIN_TX       11
@@ -38,6 +38,8 @@ void setup()
     Serial.begin(115200);
     Serial.print("Machine v ");
     Serial.println(VERSION);
+
+    pinMode(PIN_RELAY, OUTPUT);
 
     // We need room for machine name (not more than 20 bytes) and API token (64 bytes)
     EEPROM.begin(128);
