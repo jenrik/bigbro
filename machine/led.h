@@ -21,6 +21,7 @@ public:
     Led()
     {
         FastLED.addLeds<WS2811, PIN, GRB>(&m_led, 1).setCorrection(TypicalLEDStrip);
+        FastLED.setBrightness(25);
         FastLED.show();
     }
 
