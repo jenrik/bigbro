@@ -52,16 +52,23 @@ def pcb_sup(w, l):
 
 def side():
     h = case_h-(case_th+epsilon)*2
-    return translate([0, -h/2, case_th-epsilon])(cube([2, h, 10]))
+    return translate([0, -h/2, case_th-epsilon])(cube([2, h, 20]))
 
+def ring():
+    w = case_w
+    h = case_h
+    w2 = w - case_th*2
+    h2 = h - case_th*2
+    return translate([-w/2, -h/2, 0])(cube([w, h, 10])) - translate([-w2/2, -h2/2, -1])(cube([w2, h2, 12]))
+    
 def assembly():
     lt = lid_top()
     lb = up(case_th)(lid_bottom())
-    rfs = translate([case_w/4, 0, case_th*2-1])(rfid_sups())
-    r4s = translate([-case_w/4, 0, case_th*2-1])(ardu_sups())
+    rfs = rotate([0, 0, 90])(translate([case_w/4, 0, case_th*2-1])(rfid_sups()))
+    r4s = rotate([0, 0, 90])(translate([-case_w/4, 0, case_th*2-1])(ardu_sups()))
     s1 = translate([-case_w/2+case_th+epsilon/2, 0, 0])(side())
     s2 = translate([case_w/2-case_th-epsilon/2-2, 0, 0])(side())
-    return lt+lb+rfs+r4s+s1+s2
+    return lt+lb+rfs+r4s+s1+s2+ring()
 
 if __name__ == '__main__':
     a = assembly()
