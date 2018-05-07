@@ -35,6 +35,7 @@ void WiFiHandler::init(AbstractLed& led,
         bool connected = false;
         while (i < 5000)
         {
+            yield();
             delay(1);
             led.update();
             if (WiFi.status() == WL_CONNECTED)

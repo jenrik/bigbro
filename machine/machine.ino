@@ -2,7 +2,7 @@
 // https://github.com/DaKaZ/esp8266-restclient
 // https://github.com/plerup/espsoftwareserial
 
-#define SERIAL_DBG  0
+#define SERIAL_DBG  1
 
 #include <ArduinoJson.h>
 #include <EEPROM.h>
@@ -13,21 +13,30 @@
 #include "eeprom.h"
 #include "led.h"
 #include "wifi.h"
+#include "ota.h"
+#include "currentsens.h"
 
-const char* VERSION = "0.1.1";
+const char* VERSION = "0.1.2";
+const char* psw_md5 = "ba1f2511fc30423bdbb183fe33f3dd0f"; // Default ID and port, 123 for password.
 
 // TX is not connected
-#define PIN_TX       11
-#define PIN_RX       14
-#define PIN_SWITCH   12
-#define PIN_LED      13
-#define PIN_RELAY    15
+#define PIN_TX          11
+#define PIN_RX          14
+#define PIN_SWITCH      12
+#define PIN_LED         13
+#define PIN_RELAY       15
+#define PIN_CURRENT     A0
+#define PIN_DEBUG       D0
 
 Display display;
 
 Led<PIN_LED> led;
 
 WiFiHandler wifi_handler;
+
+//OTA ota(psw_md5); 
+
+Current current(PIN_CURRENT, 2000, PIN_DEBUG); // at least 2ms between samples
 
 unsigned long start_tick = millis();
 bool showing_version = true;
@@ -49,8 +58,13 @@ void setup()
     s += VERSION;
     display.set_status(s);
 
+    // Calibrate current offset
+    current.calibrate();
+     
     // Connect to WiFi network
     wifi_handler.init(led, display);
+    // Set up ota uploading
+    //ota.begin();
 }
 
 CardReader reader(PIN_RX, PIN_TX, PIN_SWITCH);
@@ -110,7 +124,7 @@ void decode_line(const char* line)
         return;
     }
 }
-
+ 
 const int MAX_LINE_LENGTH = 80;
 char line[MAX_LINE_LENGTH+1];
 int line_len = 0;
@@ -169,10 +183,20 @@ bool query_permission(const String& card_id,
     return false;
 }
 
+uint32_t serial_limiter[10];
+String current_reading;
 void loop()
 {
     yield();
+    //ota.handle();
     reader.update();
+    current.handle();
+    if(current_reading != String(current.read()))
+    {
+        current_reading = String(current.read());
+        display.set_status(current_reading);
+    }
+    
     
     const auto card_id = reader.get_card_id();
     if (card_id != last_card_id)
@@ -181,15 +205,16 @@ void loop()
         if (card_id.length())
         {
             Serial.println("Card present");
-            display.set_status("Card present");
-            yield();
+            //display.set_status("Card present");
             String message, user_name;
-            bool allowed = false;
+            //bool allowed = false;
+            bool allowed = true;
             int user_id = 0;
-            if (!query_permission(card_id, allowed, user_name, user_id, message))
-                display.set_status(message);
-            else
-            {
+            //if (!query_permission(card_id, allowed, user_name, user_id, message))
+            //    display.set_status(message);
+            //else
+            //{
+                    
                 if (allowed)
                 {
                     digitalWrite(PIN_RELAY, 1);
@@ -197,16 +222,15 @@ void loop()
                 }
                 else
                     led.set_colour(CRGB::Red);
-            }
+            //}
             yield();
-            led.set_duty_cycle(100);
+            led.set_duty_cycle(50);
             led.update();
             String name_trunc = user_name;
             if (name_trunc.length() > 12)
                 name_trunc = name_trunc.substring(0, 12) + String("...");
-            display.set_status(name_trunc,
-                               allowed ? "OK" : "Denied");
-
+            //display.set_status(name_trunc, allowed ? "OK" : "Denied");
+            /*
             AcsRestClient logger("logs");
             StaticJsonBuffer<200> jsonBuffer;
             yield();
@@ -229,6 +253,7 @@ void loop()
             else if (status == 404)
                 // Unknown card
                 display.set_status("Unknown card:", card_id);
+            */
             yield();
         }
     }
@@ -236,7 +261,7 @@ void loop()
     if (!card_id.length())
     {
         if (!showing_version)
-            display.set_status("No card");
+            display.set_status("No card", current_reading);
         digitalWrite(PIN_RELAY, 0);
         led.set_colour(CRGB::Green);
         led.set_duty_cycle(1);
