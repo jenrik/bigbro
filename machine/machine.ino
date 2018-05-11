@@ -38,8 +38,14 @@ WiFiHandler wifi_handler;
 
 Current current(PIN_CURRENT, 2000, PIN_DEBUG); // at least 2ms between samples
 
+// Printer state: idle, printing, heating. Logic is if(read >= 400){state = printing} 
+uint16_t printer_thresholds[] = {150, 400, 1000};
+
+
 unsigned long start_tick = millis();
 bool showing_version = true;
+
+bool current_sensor_present = false;
 
 void setup()
 {
@@ -58,9 +64,17 @@ void setup()
     s += VERSION;
     display.set_status(s);
 
-    // Calibrate current offset
-    current.calibrate();
-     
+    current_sensor_present = current.sensor_present();
+
+    Serial.print("Current sensor: ");Serial.println(current_sensor_present);
+    
+    if(current_sensor_present)
+    {
+        // Calibrate current offset
+        display.set_status("Calibrating");
+        current.calibrate();
+    }
+         
     // Connect to WiFi network
     wifi_handler.init(led, display);
     // Set up ota uploading
@@ -183,25 +197,53 @@ bool query_permission(const String& card_id,
     return false;
 }
 
-uint32_t serial_limiter[10];
-String current_reading;
+uint32_t    last_calibrate;
+int16_t     current_reading;
 void loop()
 {
     yield();
     //ota.handle();
     reader.update();
-    current.handle();
-    if(current_reading != String(current.read()))
+    if(current_sensor_present)
     {
-        current_reading = String(current.read());
-        display.set_status(current_reading);
+        current.handle();
+        if(current_reading != current.read())
+        {
+            current_reading = current.read();
+            display.set_status(String(current_reading) + " mA");
+        }
+        // If the printer is off, recalibrate every 5min just to kill drift.
+        if(millis() - last_calibrate > 300000)
+        {
+            last_calibrate = millis();
+            if(!digitalRead(PIN_RELAY) && current.read() != 0)
+            {
+                display.set_status("Calibrating");
+                current.calibrate();
+            }
+        }
     }
     
-    
     const auto card_id = reader.get_card_id();
-    if (card_id != last_card_id)
+    if(current_sensor_present && current.read() >= printer_thresholds[1])
+    {
+        display.set_status("Print in progress", String(current_reading) + " mA");
+    }
+    else if (!card_id.length())
     {
         last_card_id = card_id;
+        if (!showing_version)
+            display.set_status("No card");
+
+        digitalWrite(PIN_RELAY, 0);
+        led.set_colour(CRGB::Green);
+        led.set_duty_cycle(1);
+        led.set_period(10);
+    }
+    else if (card_id != last_card_id)
+    {
+        last_card_id = card_id;
+
         if (card_id.length())
         {
             Serial.println("Card present");
@@ -256,16 +298,6 @@ void loop()
             */
             yield();
         }
-    }
-
-    if (!card_id.length())
-    {
-        if (!showing_version)
-            display.set_status("No card", current_reading);
-        digitalWrite(PIN_RELAY, 0);
-        led.set_colour(CRGB::Green);
-        led.set_duty_cycle(1);
-        led.set_period(10);
     }
 
     const auto now = millis();

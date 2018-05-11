@@ -23,7 +23,7 @@ bool Current::sensor_present()
         delay(10);
         yield();
     }
-    average_reading/50;
+    average_reading /= 50;
     if(average_reading > 500 && average_reading < 600)
     {
         return true;
