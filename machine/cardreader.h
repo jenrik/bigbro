@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <RDM6300.h>
+#include "machine/libs/RDM6300/RDM6300.h"
 #include <SoftwareSerial.h>
 
 class CardReader
