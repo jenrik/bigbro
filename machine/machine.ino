@@ -1,6 +1,9 @@
-// Libraries:
+// Libraries: 
 // https://github.com/DaKaZ/esp8266-restclient
 // https://github.com/plerup/espsoftwareserial
+// Library manager:
+// ArduinoJson
+// FastLed
 
 #define SERIAL_DBG  0
 
