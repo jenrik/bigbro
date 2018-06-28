@@ -72,6 +72,7 @@ void setup()
     {
         // Calibrate current offset
         display.set_status("Calibrating");
+        delay(5000); // Delay to allow things to settle
         current.calibrate();
     }
          
@@ -197,8 +198,20 @@ bool query_permission(const String& card_id,
     return false;
 }
 
-uint32_t    last_calibrate;
-int16_t     current_reading;
+
+// Printer specific variables
+    uint32_t    last_calibrate;
+    uint32_t    end_of_print_timer;
+    const uint32_t    cooldown_time = 5*60*1000;
+    int16_t     current_reading;
+
+    // Keeps track of the state of the printer.
+    // S0  | Print finished, cooling down.
+    // S1  | Print in progress
+    // S2  | Printer just turned on.
+    bool        print_state = 0;
+
+// end
 void loop()
 {
     yield();
@@ -225,25 +238,18 @@ void loop()
     }
     
     const auto card_id = reader.get_card_id();
-    if(current_sensor_present && current.read() >= printer_thresholds[1])
+    // If it's a printer, if it's printing, and it's not just done with a print.
+    if(current_sensor_present && current.read() >= printer_thresholds[1] && print_state<2) 
     {
+        print_state = 1;
         display.set_status("Print in progress", String(current_reading) + " mA");
     }
-    else if (!card_id.length())
-    {
-        last_card_id = card_id;
-        if (!showing_version)
-            display.set_status("No card");
-
-        digitalWrite(PIN_RELAY, 0);
-        led.set_colour(CRGB::Green);
-        led.set_duty_cycle(1);
-        led.set_period(10);
-    }
+    // If we're not in state 1, check for a card with access
     else if (card_id != last_card_id)
     {
         last_card_id = card_id;
 
+        // If there's a card present, autheticate it
         if (card_id.length())
         {
             Serial.println("Card present");
@@ -297,6 +303,26 @@ void loop()
                 display.set_status("Unknown card:", card_id);
             */
             yield();
+        }
+        // If it's a printer and it's just finished a print
+        else if(current_sensor_present && print_state == 1)
+        {
+            end_of_print_timer = millis();
+            print_state = 2;
+        }
+        else if(print_state == 2 && millis()-end_of_print_timer > cooldown_time)
+        {/*Don't turn off the printer during this state*/
+            display.set_status("Cooling down");
+        }
+        else
+        {
+            if (!showing_version)
+            display.set_status("No card");
+
+            digitalWrite(PIN_RELAY, 0);
+            led.set_colour(CRGB::Green);
+            led.set_duty_cycle(1);
+            led.set_period(10);
         }
     }
 

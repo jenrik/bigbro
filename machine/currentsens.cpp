@@ -55,7 +55,7 @@ void Current::handle()
     //debug_print();
     if(_peak_buffer_filled)
     {
-        _peak_buffer_filled = 0;
+        _peak_buffer_filled = false;
         _last_avg_peak = _average(_peak_sample, _peak_sample_size);
     }
 }
@@ -120,7 +120,7 @@ void Current::_peak() // stores the Peak current in an array
 {
     if(_raw_buffer_filled)
     {
-        _raw_buffer_filled = 0;
+        _raw_buffer_filled = false;
     
         int16_t _max = _find_peak(_raw_samples, _raw_sample_size, 1);
         int16_t _min = _find_peak(_raw_samples, _raw_sample_size, 0);

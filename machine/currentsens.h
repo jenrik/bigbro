@@ -33,7 +33,7 @@ class Current
         int16_t  _AC_current         = 0;
         uint16_t _v_range           = 4650; // mV   | Max ADC voltage on the pin of the divider.
         uint16_t _mv_per_A          = 200;  // mV/A | 
-        uint16_t _min_sample_delay  = 500;  // uS   | Min time between AC samples
+        uint16_t _min_sample_delay  = 200;  // uS   | Min time between AC samples
 
         int16_t _find_peak(int16_t * arr, uint16_t size, bool return_max = true);
         void _peak();

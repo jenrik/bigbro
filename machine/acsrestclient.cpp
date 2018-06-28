@@ -1,6 +1,6 @@
 #include "acsrestclient.h"
 
-#include "libs/esp8266-restclient/RestClient.h"
+
 
 #define SERVER "panopticon.hal9k.dk"
 #define USE_SSL 1
