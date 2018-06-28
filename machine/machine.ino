@@ -17,7 +17,7 @@
 #include "currentsens.h"
 
 const char* VERSION = "0.1.2";
-const char* psw_md5 = "ba1f2511fc30423bdbb183fe33f3dd0f"; // Default ID and port, 123 for password.
+const char* psw_md5 = "ba1f2511fc30423bdbb183fe33f3dd0f"; // OTA: Default ID and port, 123 for password.
 
 // TX is not connected
 #define PIN_TX          11
@@ -26,7 +26,7 @@ const char* psw_md5 = "ba1f2511fc30423bdbb183fe33f3dd0f"; // Default ID and port
 #define PIN_LED         13
 #define PIN_RELAY       15
 #define PIN_CURRENT     A0
-#define PIN_DEBUG       D0
+#define PIN_DEBUG       -1
 
 Display display;
 
@@ -36,7 +36,7 @@ WiFiHandler wifi_handler;
 
 //OTA ota(psw_md5); 
 
-Current current(PIN_CURRENT, 2000, PIN_DEBUG); // at least 2ms between samples
+Current current(PIN_CURRENT, 1, PIN_DEBUG); // 1ms between samples
 
 // Printer state: idle, printing, heating. Logic is if(read >= 400){state = printing} 
 uint16_t printer_thresholds[] = {150, 400, 1000};
@@ -74,6 +74,7 @@ void setup()
         display.set_status("Calibrating");
         delay(5000); // Delay to allow things to settle
         current.calibrate();
+        current.init(); // Init this after calibrate.
     }
          
     // Connect to WiFi network
