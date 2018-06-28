@@ -15,6 +15,9 @@
 #include "wifi.h"
 #include "ota.h"
 #include "currentsens.h"
+#include <Ticker.h>
+
+Ticker sampler;
 
 const char* VERSION = "0.1.2";
 const char* psw_md5 = "ba1f2511fc30423bdbb183fe33f3dd0f"; // OTA: Default ID and port, 123 for password.
@@ -36,7 +39,7 @@ WiFiHandler wifi_handler;
 
 //OTA ota(psw_md5); 
 
-Current current(PIN_CURRENT, 1, PIN_DEBUG); // 1ms between samples
+Current current(PIN_CURRENT, PIN_DEBUG);
 
 // Printer state: idle, printing, heating. Logic is if(read >= 400){state = printing} 
 uint16_t printer_thresholds[] = {150, 400, 1000};
@@ -63,18 +66,15 @@ void setup()
     String s = "Version ";
     s += VERSION;
     display.set_status(s);
-
-    current_sensor_present = current.sensor_present();
-
-    Serial.print("Current sensor: ");Serial.println(current_sensor_present);
     
-    if(current_sensor_present)
+    if(current.sensor_present())
     {
+        Serial.print("Current sensor present");
         // Calibrate current offset
         display.set_status("Calibrating");
         delay(5000); // Delay to allow things to settle
         current.calibrate();
-        current.init(); // Init this after calibrate.
+        sampler.attach_ms(2, current_sample);
     }
          
     // Connect to WiFi network
@@ -354,4 +354,9 @@ void loop()
             line_len = 0;
         }
     }
+}
+
+void current_sample()
+{
+    current.sample();
 }

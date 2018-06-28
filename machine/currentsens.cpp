@@ -1,9 +1,8 @@
 #include "currentsens.h"
 
-Current::Current(uint8_t pin, uint16_t sample_period, int8_t debug_pin)
+Current::Current(uint8_t pin, int8_t debug_pin)
 {
     _pin = pin;
-    _sample_period = sample_period;
 
     pinMode(_pin, INPUT);
     
@@ -28,11 +27,6 @@ bool Current::sensor_present()
         return true;
     }
     return false;
-}
-
-void Current::init()
-{
-    sampler.attach_ms(_sample_period, _sample);
 }
 
 uint32_t serial_limiter;
@@ -85,6 +79,18 @@ void Current::set_mv_A(uint16_t mv_per)
     _mv_per_A  =  mv_per;
 }
 
+void Current::sample()
+{
+    _raw_samples[_raw_sample_offset] = analogRead(_pin);
+
+    _raw_sample_offset++;
+    if(_raw_sample_offset >= _raw_sample_size)
+    {
+        _raw_buffer_filled = true;
+        _raw_sample_offset = 0;
+    }
+}
+
 // Private functions
 
 uint16_t Current::_average(int16_t * arr, uint16_t size)
@@ -95,18 +101,6 @@ uint16_t Current::_average(int16_t * arr, uint16_t size)
         average_reading += arr[i];
     }
     return average_reading/size;
-}
-
-void Current::_sample()
-{
-    _raw_samples[_raw_sample_offset] = analogRead(_pin);
-
-    _raw_sample_offset++;
-    if(_raw_sample_offset >= _raw_sample_size)
-    {
-        _raw_buffer_filled = true;
-        _raw_sample_offset = 0;
-    }
 }
 
 void Current::_peak() // stores the Peak current in an array
