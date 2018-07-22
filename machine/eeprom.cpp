@@ -8,7 +8,7 @@ const int API_TOKEN_OFFSET = MACHINE_ID_SIZE;
 const int API_TOKEN_SIZE = 80;
 
 const char* ssids[] = {
-    "hal9k"
+    "bullestock-guest"//"hal9k"
 };
 const char* passwords[] = {
     ""

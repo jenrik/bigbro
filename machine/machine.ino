@@ -6,6 +6,9 @@
 
 #include <ArduinoJson.h>
 #include <EEPROM.h>
+extern "C" {
+#include <user_interface.h>
+}
 
 #include "acsrestclient.h"
 #include "cardreader.h"
@@ -14,7 +17,7 @@
 #include "led.h"
 #include "wifi.h"
 
-const char* VERSION = "0.1.1";
+const char* VERSION = "0.1.2";
 
 // TX is not connected
 #define PIN_TX       11
@@ -29,8 +32,48 @@ Led<PIN_LED> led;
 
 WiFiHandler wifi_handler;
 
-unsigned long start_tick = millis();
+unsigned long start_tick = 0;
+unsigned long last_info_tick = 0;
 bool showing_version = true;
+
+String get_reset_reason()
+{
+    static const struct
+    {
+        int reason;
+        const char* desc;
+    } reasons[] = {
+        { REASON_DEFAULT_RST, "Def" },
+        { REASON_WDT_RST, "WD" },
+        { REASON_EXCEPTION_RST, "Ex" },
+        { REASON_SOFT_WDT_RST, "SWD" },
+        { REASON_SOFT_RESTART, "Res" },
+        { REASON_DEEP_SLEEP_AWAKE, "DS" },
+        { REASON_EXT_SYS_RST, "Sys" }
+    };
+    
+    const auto r = ESP.getResetInfoPtr()->reason;
+
+    for (size_t i = 0; i < sizeof(reasons)/sizeof(reasons[0]); ++i)
+    {
+        if (r == reasons[i].reason)
+            return reasons[i].desc;
+    }
+    return String(r);
+}
+
+void update_info(unsigned long now)
+{
+    auto rem = now/1000;
+    const auto h = rem/(60*60);
+    rem -= h*60*60;
+    const auto m = rem/60;
+    rem -= m*60;
+    char buf[3+3+4+2+1+2+1+2+10];
+    sprintf(buf, "RC %s Up %02d:%02d:%02d",
+            get_reset_reason().c_str(), h, m, rem);
+    display.set_info(buf);
+}
 
 void setup()
 {
@@ -48,6 +91,7 @@ void setup()
     String s = "Version ";
     s += VERSION;
     display.set_status(s);
+    start_tick = millis();
 
     // Connect to WiFi network
     wifi_handler.init(led, display);
@@ -246,7 +290,12 @@ void loop()
     const auto now = millis();
     if (now - start_tick > 5000)
         showing_version = false;
-
+    if (now - last_info_tick > 1000)
+    {
+        update_info(now);
+        last_info_tick = now;
+    }
+    
     delay(1);
     led.update();
     yield();

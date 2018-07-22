@@ -1,8 +1,9 @@
 #include "display.h"
 
-#define Y_1    15
-#define Y_2    30
-#define Y_3    45
+const int Y_1 = 13;
+const int Y_2 = Y_1+Y_1;
+const int Y_3 = Y_2+Y_1;
+const int Y_4 = Y_3+Y_1;
 
 Display::Display()
 {
@@ -10,7 +11,7 @@ Display::Display()
     m_display->begin();
     m_display->clearBuffer();
     m_display->setDrawColor(1);
-    m_display->setFont(u8g2_font_7x14B_mr);
+    m_display->setFont(u8g2_font_6x10_tf);
     m_display->setFontRefHeightExtendedText();
     m_display->setFontPosTop();
     m_display->setFontDirection(0);
@@ -42,6 +43,11 @@ void Display::set_status(const String& line1,
     set_status(line1.c_str(), line2.c_str());
 }
 
+void Display::set_info(const String& line3)
+{
+    m_line3 = line3;
+}
+
 void Display::update()
 {
     m_display->clearBuffer();
@@ -49,5 +55,6 @@ void Display::update()
     m_display->drawStr(0, Y_1, m_network_status.c_str());
     m_display->drawStr(0, Y_2, m_line1.c_str());
     m_display->drawStr(0, Y_3, m_line2.c_str());
+    m_display->drawStr(0, Y_4, m_line3.c_str());
     m_display->sendBuffer();
 }

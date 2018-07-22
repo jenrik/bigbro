@@ -23,6 +23,8 @@ public:
     void set_status(const String& line1,
                     const String& line2 = "");
 
+    void set_info(const String& line3);
+    
     void set_network_status(const char* status);
 
 private:
@@ -33,4 +35,5 @@ private:
     String m_network_status;
     String m_line1;
     String m_line2;
+    String m_line3;
 };
