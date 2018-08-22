@@ -5,7 +5,7 @@
 // ArduinoJson
 // FastLed
 
-#define SERIAL_DBG  0
+#define SERIAL_DBG  1
 
 #include <ArduinoJson.h>
 #include <EEPROM.h>
@@ -20,7 +20,7 @@ extern "C" {
 #include "led.h"
 #include "wifi.h"
 
-const char* VERSION = "0.1.2";
+const char* VERSION = "C0.0.1";
 
 // TX is not connected
 #define PIN_TX       11
@@ -28,6 +28,8 @@ const char* VERSION = "0.1.2";
 #define PIN_SWITCH   12
 #define PIN_LED      13
 #define PIN_RELAY    15
+
+#define QUERY_INTERVAL 1000
 
 Display display;
 
@@ -37,6 +39,7 @@ WiFiHandler wifi_handler;
 
 unsigned long start_tick = 0;
 unsigned long last_info_tick = 0;
+unsigned long last_check_tick = 0;
 bool showing_version = true;
 
 String get_reset_reason()
@@ -101,7 +104,6 @@ void setup()
 }
 
 CardReader reader(PIN_RX, PIN_TX, PIN_SWITCH);
-String last_card_id;
 
 void decode_line(const char* line)
 {
@@ -135,18 +137,17 @@ void decode_line(const char* line)
     case 't':
         {
             Serial.println("Sending test request");
-            String message, user_name;
-            bool allowed = false;
-            int user_id = 0;
-            if (!query_permission("0000BB96C5", allowed, user_name, user_id, message))
+            String message;
+            bool state = false;
+            if (!query_camera_state(state, message))
             {
                 Serial.print("Error: ");
                 Serial.println(message);
             }
             else
             {
-                Serial.print("Success: User ");
-                Serial.println(user_name);
+                Serial.print("State: ");
+                Serial.println(state);
             }
         }
         break;
@@ -162,23 +163,20 @@ const int MAX_LINE_LENGTH = 80;
 char line[MAX_LINE_LENGTH+1];
 int line_len = 0;
 
-bool query_permission(const String& card_id,
-                      bool& allowed,
-                      String& user_name,
-                      int& user_id,
-                      String& message)
-{
-    AcsRestClient rc("permissions");
+bool query_camera_state(bool& state,
+                         String& message) {
+    AcsRestClient rc("camera");
+    
     StaticJsonBuffer<200> jsonBuffer;
     auto& root = jsonBuffer.createObject();
     root["api_token"] = Eeprom::get_api_token();
-    root["card_id"] = card_id;
+
     const auto status = rc.post(root);
     led.update();
-    Serial.print("HTTP status ");
+    Serial.print("HTTP status: ");
     Serial.println(status);
-    if (status == 200)
-    {
+
+    if (status == 200) {
         auto resp = rc.get_response();
         // Remove garbage (why is it there?)
         int i = 0;
@@ -188,115 +186,77 @@ bool query_permission(const String& card_id,
         while ((resp[j] != '}') && (j < resp.length()))
             ++j;
         resp = resp.substring(i, j+1);
+
         StaticJsonBuffer<200> jsonBuffer;
         auto& json_resp = jsonBuffer.parseObject(resp);
-        if (!json_resp.success())
-        {
+        if (!json_resp.success()) {
             Serial.println("Bad JSON:");
             Serial.println(resp);
             message = "Bad JSON";
-        }
-        else
-        {
-            allowed = json_resp["allowed"];
-            user_name = (const char*) json_resp["name"];
-            user_id = json_resp["id"];
+        } else {
+            state = json_resp["state"];
         }
         return true;
-    }
-    else if (status == 404)
-    {
-        message = "Unknown card";
-        allowed = false;
-        return true;
-    }
+    } else {
     String s = "Bad HTTP reply:";
     s += String(status);
     message = s;
     return false;
 }
+}
 
 void loop()
 {
     yield();
-    reader.update();
     
-    const auto card_id = reader.get_card_id();
-    if (card_id != last_card_id)
-    {
-        last_card_id = card_id;
-        if (card_id.length())
-        {
-            Serial.println("Card present");
-            display.set_status("Card present");
-            yield();
-            String message, user_name;
-            bool allowed = false;
-            int user_id = 0;
-            if (!query_permission(card_id, allowed, user_name, user_id, message))
-                display.set_status(message);
-            else
-            {
-                if (allowed)
-                {
-                    digitalWrite(PIN_RELAY, 1);
-                    led.set_colour(CRGB::Green);
-                }
-                else
-                    led.set_colour(CRGB::Red);
-            }
-            yield();
-            led.set_duty_cycle(100);
-            led.update();
-            String name_trunc = user_name;
-            if (name_trunc.length() > 12)
-                name_trunc = name_trunc.substring(0, 12) + String("...");
-            display.set_status(name_trunc,
-                               allowed ? "OK" : "Denied");
-
-            AcsRestClient logger("logs");
-            StaticJsonBuffer<200> jsonBuffer;
-            yield();
-            auto& root = jsonBuffer.createObject();
-            root["api_token"] = Eeprom::get_api_token();
-            auto& log = root.createNestedObject("log");
-            log["user_id"] = user_id;
-            if (allowed)
-                log["message"] = "Successful machine access";
-            else
-                log["message"] = "Machine access denied";
-            const auto status = logger.post(root);
-            yield();
-            if (status != 200)
-            {
-                String s = "Bad HTTP log reply:";
-                s += String(status);
-                display.set_status(s);
-            }
-            else if (status == 404)
-                // Unknown card
-                display.set_status("Unknown card:", card_id);
-            yield();
-        }
-    }
-
-    if (!card_id.length())
-    {
-        if (!showing_version)
-            display.set_status("No card");
-        digitalWrite(PIN_RELAY, 0);
-        led.set_colour(CRGB::Green);
-        led.set_duty_cycle(1);
-        led.set_period(10);
-    }
-
     const auto now = millis();
-    if (now - start_tick > 5000)
+    // Stop showing version after 5 seconds
+    if (now - start_tick > 5000) {
         showing_version = false;
-    if (now - last_info_tick > 1000)
-    {
+    }
+    // Draw uptime
+    if (now - last_info_tick > 1000) {
+        //Serial.println("info");
         update_info(now);
         last_info_tick = now;
+    }
+    // Query camera status
+    if (now - last_check_tick > QUERY_INTERVAL) {
+        #if SERIAL_DBG
+        Serial.println("Quering camera state");
+        #endif
+        
+        String message;
+        bool status = true;
+        if (!query_camera_state(status, message)) {
+                display.set_status(message);
+            // Fail-safe: activate cameras
+            #if SERIAL_DBG
+            Serial.println("fail-safe mode enabled");
+            #endif
+            digitalWrite(PIN_RELAY, 1);
+            display.set_status("ON, FAIL-SAFE mode");
+            led.set_colour(CRGB::Red);
+            led.set_duty_cycle(50);
+            led.set_period(1);
+            led.update();
+        } else {
+            if (status) {
+                // Camera ON
+                digitalWrite(PIN_RELAY, 1);
+                led.set_colour(CRGB::Red);
+                display.set_status("ON");
+            } else {
+                // Camera OFF
+        digitalWrite(PIN_RELAY, 0);
+        led.set_colour(CRGB::Green);
+                display.set_status("OFF");
+            }
+            led.set_duty_cycle(100);
+            led.update();
+    }
+
+        last_check_tick = now;
     }
     
     delay(1);
