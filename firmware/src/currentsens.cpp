@@ -36,7 +36,7 @@ bool Current::is_printing()
     {
         return false;
     }
-    else
+    else if(read() > _threshold)
     {
         _last_above_thresh = millis();
     }

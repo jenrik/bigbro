@@ -37,6 +37,7 @@ void setup()
         display.set_status("Calibrating");
         delay(5000); // Delay to allow things to settle
         current.calibrate();
+        display.set_status("Ready");
     }
          
     // Connect to WiFi network
@@ -157,20 +158,6 @@ bool query_permission(const String& card_id,
     return false;
 }
 
-
-// Printer specific variables
-    uint32_t        last_calibrate;
-    uint32_t        end_of_print_timer;
-    const uint32_t  cooldown_time = 5*60*1000; // 5
-    uint16_t        last_current_reading, current_reading;
-
-    // Keeps track of the state of the printer.
-    // S0  | Printer just turned on.
-    // S1  | Print in progress
-    // S2  | Print finished, cooling down.
-    PrintState print_state = STARTED;
-
-// end
 void loop()
 {
     yield();
@@ -265,26 +252,27 @@ void loop()
                 display.set_status("Unknown card:", card_id);
             yield();
         }
-        // If it's a printer and it's just finished a print
-        else if(current_sensor_present && print_state == IN_PROGRESS)
+    }
+    // If it's a printer and it's just finished a print
+    else if(current_sensor_present && print_state == IN_PROGRESS)
+    {
+        end_of_print_timer = millis();
+        print_state = COOLING;
+    }
+    else if(print_state == COOLING && millis()-end_of_print_timer < cooldown_time)
+    {/*Don't turn off the printer during this state*/
+        display.set_status("Cooling down", String(int(millis()-end_of_print_timer/1000) + " seconds"));
+    }
+    else if(card_id.length() == 0)
+    {
+        if (!showing_version)
         {
-            end_of_print_timer = millis();
-            print_state = COOLING;
-        }
-        else if(print_state == COOLING && millis()-end_of_print_timer < cooldown_time)
-        {/*Don't turn off the printer during this state*/
-            display.set_status("Cooling down");
-        }
-        else
-        {
-            if (!showing_version)
             display.set_status("No card");
-
-            digitalWrite(PIN_RELAY, 0);
-            led.set_colour(CRGB::Green);
-            led.set_duty_cycle(1);
-            led.set_period(10);
         }
+        digitalWrite(PIN_RELAY, 0);
+        led.set_colour(CRGB::Green);
+        led.set_duty_cycle(1);
+        led.set_period(10);
     }
 
     const auto now = millis();

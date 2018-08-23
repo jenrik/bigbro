@@ -46,4 +46,15 @@ bool query_permission(const String& card_id,
                       int& user_id,
                       String& message);
 
+
+
+// Printer specific variables
+uint32_t        last_calibrate;
+uint32_t        end_of_print_timer;
+const uint32_t  cooldown_time = 5*60*1000; // 5
+uint16_t        last_current_reading, current_reading;
+
 enum PrintState { STARTED, IN_PROGRESS, COOLING };
+PrintState print_state = STARTED;
+
+// end
