@@ -1,0 +1,6 @@
+[submodule "firmware/lib/SoftwareSerial"]
+	path = firmware/lib/SoftwareSerial
+	url = https://github.com/plerup/espsoftwareserial.git
+[submodule "firmware/lib/RestClient"]
+	path = firmware/lib/RestClient
+	url = git@github.com:DaKaZ/esp8266-restclient.git
