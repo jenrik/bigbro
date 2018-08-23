@@ -188,8 +188,8 @@ void loop()
             last_current_reading = current_reading;
             display.set_status(String(current_reading) + " mA");
         }
-        // If the printer is off, recalibrate every 5min just to kill drift.
-        if(millis() - last_calibrate > 300000)
+        // If the printer is off, recalibrate every 30min just to kill drift.
+        if(millis() - last_calibrate > 30*60*1000)
         {
             last_calibrate = millis();
             if(!digitalRead(PIN_RELAY) && current.read() != 0)
