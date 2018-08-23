@@ -3,4 +3,4 @@
 	url = https://github.com/plerup/espsoftwareserial.git
 [submodule "firmware/lib/RestClient"]
 	path = firmware/lib/RestClient
-	url = git@github.com:DaKaZ/esp8266-restclient.git
+	url = https://github.com/DaKaZ/esp8266-restclient.git
