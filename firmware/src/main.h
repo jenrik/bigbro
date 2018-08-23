@@ -30,8 +30,6 @@ const char* psw_md5 = "ba1f2511fc30423bdbb183fe33f3dd0f"; // OTA: Default ID and
 #define PIN_LED         13
 #define PIN_RELAY       15
 #define PIN_CURRENT     A0
-#define PIN_DEBUG       -1
-#define CURRENT_THRESH  200
 
 
 // Prototypes

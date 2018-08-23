@@ -5,7 +5,7 @@ Led<PIN_LED> led;
 WiFiHandler wifi_handler;
 //OTA ota(psw_md5); 
 
-Current current(PIN_CURRENT, PIN_DEBUG, CURRENT_THRESH);
+Current current(PIN_CURRENT);
 
 unsigned long start_tick = millis();
 bool showing_version = true;
