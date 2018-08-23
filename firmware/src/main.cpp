@@ -168,7 +168,7 @@ bool query_permission(const String& card_id,
     // S0  | Printer just turned on.
     // S1  | Print in progress
     // S2  | Print finished, cooling down.
-    bool    print_state = 0;
+    PrintState print_state = STARTED;
 
 // end
 void loop()
@@ -202,9 +202,9 @@ void loop()
     
     const auto card_id = reader.get_card_id();
     // If it's a printer, if it's printing, and it's not just done with a print.
-    if(current_sensor_present && current.is_printing() && print_state<2) 
+    if(current_sensor_present && current.is_printing() && (print_state == STARTED || print_state == IN_PROGRESS)) 
     {
-        print_state = 1;
+        print_state = IN_PROGRESS;
         display.set_status("Print in progress", String(current_reading) + " mA");
     }
     // If we're not in state 1, or we're not a printer, check for a card with access
@@ -266,12 +266,12 @@ void loop()
             yield();
         }
         // If it's a printer and it's just finished a print
-        else if(current_sensor_present && print_state == 1)
+        else if(current_sensor_present && print_state == IN_PROGRESS)
         {
             end_of_print_timer = millis();
-            print_state = 2;
+            print_state = COOLING;
         }
-        else if(print_state == 2 && millis()-end_of_print_timer < cooldown_time)
+        else if(print_state == COOLING && millis()-end_of_print_timer < cooldown_time)
         {/*Don't turn off the printer during this state*/
             display.set_status("Cooling down");
         }
