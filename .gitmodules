@@ -1,6 +1,0 @@
-[submodule "lib/RestClient"]
-	path = lib/RestClient
-	url = https://github.com/DaKaZ/esp8266-restclient.git
-[submodule "lib/SoftwareSerial"]
-	path = lib/SoftwareSerial
-	url = https://github.com/plerup/espsoftwareserial.git
