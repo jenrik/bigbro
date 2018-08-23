@@ -14,7 +14,9 @@ This example code assumes you're using platformio core. The CLI tool.
 
 ```bash
 git clone https://github.com/Duckle29/bigbro.git
+cd bigbro
 git submodule update --init --recursive
+cd firmware
 platformio run -t upload
 ```
 
