@@ -1,7 +1,3 @@
-// Libraries:
-// https://github.com/DaKaZ/esp8266-restclient
-// https://github.com/plerup/espsoftwareserial
-
 #pragma once
 
 #include <Arduino.h>
@@ -38,21 +34,18 @@ void decode_line(const char* line);
 const int MAX_LINE_LENGTH = 80;
 char line[MAX_LINE_LENGTH+1];
 int line_len = 0;
+
 bool query_permission(const String& card_id,
                       bool& allowed,
                       String& user_name,
                       int& user_id,
                       String& message);
 
-
-
 // Printer specific variables
-uint32_t        last_calibrate;
-uint32_t        end_of_print_timer;
-const uint32_t  cooldown_time = 5*60*1000; // 5
-uint16_t        last_current_reading, current_reading;
+uint32_t last_calibrate;
+uint32_t end_of_print_timer;
+const uint32_t cooldown_time = 5*60*1000; // 5 min
+uint16_t last_current_reading, current_reading;
 
 enum PrintState { STARTED, IN_PROGRESS, COOLING };
-PrintState print_state = STARTED;
-
 // end

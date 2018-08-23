@@ -4,8 +4,11 @@ Display display;
 Led<PIN_LED> led;
 WiFiHandler wifi_handler;
 //OTA ota(psw_md5); 
-
 Current current(PIN_CURRENT);
+PrintState print_state = STARTED;
+
+CardReader reader(PIN_RX, PIN_TX, PIN_SWITCH);
+String last_card_id;
 
 unsigned long start_tick = millis();
 bool showing_version = true;
@@ -14,9 +17,8 @@ bool current_sensor_present = false;
 
 void setup()
 {
-    delay(1000);
     Serial.begin(115200);
-    Serial.print("Machine v ");
+    Serial.print("Machine v");
     Serial.println(VERSION);
 
     pinMode(PIN_RELAY, OUTPUT);
@@ -25,9 +27,8 @@ void setup()
     EEPROM.begin(128);
 
     display.set_machine_id(Eeprom::get_machine_id().c_str());
-    String s = "Version ";
-    s += VERSION;
-    display.set_status(s);
+    String version = "Version " + VERSION;
+    display.set_status(version);
     
     current_sensor_present = current.sensor_present();
     if(current_sensor_present)
@@ -35,19 +36,16 @@ void setup()
         Serial.print("Current sensor present");
         // Calibrate current offset
         display.set_status("Calibrating");
-        delay(5000); // Delay to allow things to settle
         current.calibrate();
         display.set_status("Ready");
     }
          
     // Connect to WiFi network
     wifi_handler.init(led, display);
+    
     // Set up ota uploading
     //ota.begin();
 }
-
-CardReader reader(PIN_RX, PIN_TX, PIN_SWITCH);
-String last_card_id;
 
 void decode_line(const char* line)
 {
@@ -71,8 +69,8 @@ void decode_line(const char* line)
 
     case 'm':
         // Set machine ID
-        while (line[++i] == ' ')
-            ;
+        while (line[++i] == ' ') {}
+
         Eeprom::set_machine_id(line+i);
         Serial.println("Machine ID set");
         display.set_machine_id(Eeprom::get_machine_id().c_str());
@@ -95,7 +93,7 @@ void decode_line(const char* line)
                 Serial.println(user_name);
             }
         }
-        break;
+        return;
 
     default:
         Serial.print("Unknown command: ");
@@ -111,25 +109,29 @@ bool query_permission(const String& card_id,
                       String& message)
 {
     AcsRestClient rc("permissions");
+
     StaticJsonBuffer<200> jsonBuffer;
     auto& root = jsonBuffer.createObject();
     root["api_token"] = Eeprom::get_api_token();
     root["card_id"] = card_id;
+
     const auto status = rc.post(root);
+
     led.update();
+
     Serial.print("HTTP status ");
     Serial.println(status);
+
     if (status == 200)
     {
         auto resp = rc.get_response();
+        
         // Remove garbage (why is it there?)
-        int i = 0;
-        while ((resp[i] != '{') && (i < resp.length()))
-            ++i;
-        int j = i;
-        while ((resp[j] != '}') && (j < resp.length()))
-            ++j;
+        int i;
+        for(i=0; (resp[i] != '{') && (i < resp.length()); i++) {}
+        for(int j=i; (resp[j] != '}') && (j < resp.length()); j++) {}
         resp = resp.substring(i, j+1);
+
         StaticJsonBuffer<200> jsonBuffer;
         auto& json_resp = jsonBuffer.parseObject(resp);
         if (!json_resp.success())
