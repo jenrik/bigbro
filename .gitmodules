@@ -1,0 +1,3 @@
+[submodule "lib/RestClient"]
+	path = lib/RestClient
+	url = git@github.com:DaKaZ/esp8266-restclient.git
