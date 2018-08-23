@@ -45,3 +45,5 @@ bool query_permission(const String& card_id,
                       String& user_name,
                       int& user_id,
                       String& message);
+
+enum PrintState { STARTED, IN_PROGRESS, COOLING };
