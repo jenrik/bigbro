@@ -3,7 +3,7 @@
 Display display;
 Led<PIN_LED> led;
 WiFiHandler wifi_handler;
-//OTA ota(psw_md5); 
+OTA ota(psw_md5); 
 Current current(PIN_CURRENT);
 PrintState print_state = STARTED;
 
@@ -44,7 +44,7 @@ void setup()
     wifi_handler.init(led, display);
     
     // Set up ota uploading
-    //ota.begin();
+    ota.begin();
 }
 
 void decode_line(const char* line)
@@ -163,7 +163,7 @@ bool query_permission(const String& card_id,
 void loop()
 {
     yield();
-    //ota.handle();
+    ota.handle();
     reader.update();
     
     if(current_sensor_present)
