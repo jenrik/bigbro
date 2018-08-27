@@ -21,7 +21,8 @@
 #include <currentsens.h>
 
 const char* VERSION = "0.1.2";
-const char* psw_md5 = "ba1f2511fc30423bdbb183fe33f3dd0f"; // OTA: Default ID and port, 123 for password.
+const char* psw_md5 = "202cb962ac59075b964b07152d234b70"; // OTA: Default ID and port, 123 for password.
+// Note: password hashes can be computed using the following commands: echo -n 123 | md5sum
 
 // TX is not connected
 #define PIN_TX          11
