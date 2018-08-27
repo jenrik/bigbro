@@ -17,7 +17,13 @@ git clone https://github.com/Duckle29/bigbro.git
 cd bigbro
 git submodule update --init --recursive
 cd firmware
-platformio run -t upload
+platformio run -t upload -e d1_mini_serial
+```
+
+When deployed, you can also update them via OTA. Set the correct IP in platformio.ini, and use:
+
+```bash
+platformio run -t upload -e d1_mini_ota
 ```
 
 The platformio run command can obviosly be replaced with however you prefer usign platformio,

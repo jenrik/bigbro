@@ -168,14 +168,11 @@ void loop()
     {
         current.handle();
         current_reading = current.read();
+        
+        // Round to nearest multiple of 5
+        display.set_status(String(int(floor(current_reading + 2.5))) + " mA");
 
-        // If current has changed more than 10 mA
-        if(abs(current_reading-last_current_reading) >= 10) 
-        {
-            last_current_reading = current_reading;
-            display.set_status(String(current_reading) + " mA");
-        }
-        // If the printer is off, recalibrate every 30min just to kill drift.
+        // If the printer is off, recalibrate every 30min just to kill drift. May not be needed
         if(millis() - last_calibrate > 30*60*1000)
         {
             last_calibrate = millis();
