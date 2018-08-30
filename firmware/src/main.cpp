@@ -170,7 +170,7 @@ void loop()
         current_reading = current.read();
         
         // Round to nearest multiple of 5
-        display.set_status(String(int(floor(current_reading + 2.5))) + " mA");
+        display.set_status(String(floor(current_reading + 2.5)) + " mA");
 
         // If the printer is off, recalibrate every 30min just to kill drift. May not be needed
         if(millis() - last_calibrate > 30*60*1000)
@@ -200,11 +200,14 @@ void loop()
         if (card_id.length())
         {
             display.set_status("Card present");
+
             String message, user_name;
             bool allowed = false;
             int user_id = 0;
             if (!query_permission(card_id, allowed, user_name, user_id, message))
+            {
                 display.set_status(message);
+            }
             else
             {   
                 if (allowed)
@@ -217,12 +220,17 @@ void loop()
                     led.set_colour(CRGB::Red);
                 }
             }
+
             yield();
+            
             led.set_duty_cycle(50);
             led.update();
+            
             String name_trunc = user_name;
             if (name_trunc.length() > 12)
+            {
                 name_trunc = name_trunc.substring(0, 12) + String("...");
+            }
             display.set_status(name_trunc, allowed ? "OK" : "Denied");
 
             AcsRestClient logger("logs");
@@ -233,9 +241,13 @@ void loop()
             auto& log = root.createNestedObject("log");
             log["user_id"] = user_id;
             if (allowed)
+            {
                 log["message"] = "Successful machine access";
+            }
             else
+            {
                 log["message"] = "Machine access denied";
+            }
             const auto status = logger.post(root);
             yield();
             if (status != 200)
@@ -245,8 +257,10 @@ void loop()
                 display.set_status(s);
             }
             else if (status == 404)
+            {
                 // Unknown card
                 display.set_status("Unknown card:", card_id);
+            }
             yield();
         }
     }
@@ -257,8 +271,8 @@ void loop()
         print_state = COOLING;
     }
     else if(print_state == COOLING && millis()-end_of_print_timer < cooldown_time)
-    {/*Don't turn off the printer during this state*/
-        display.set_status("Cooling down", String(int(millis()-end_of_print_timer/1000) + " seconds"));
+    { // Don't turn off the printer during this state
+        display.set_status("Cooling down", (millis()-end_of_print_timer/1000) + " seconds");
     }
     else if(card_id.length() == 0)
     {
@@ -274,7 +288,9 @@ void loop()
 
     const auto now = millis();
     if (now - start_tick > 5000)
+    {
         showing_version = false;
+    }
 
     delay(1);
     led.update();
@@ -291,7 +307,9 @@ void loop()
             decode_line(line);
         }
         else if (line_len < MAX_LINE_LENGTH)
+        {
             line[line_len++] = c;
+        }
         else
         {
             Serial.print("Line too long: ");

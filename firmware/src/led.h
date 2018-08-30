@@ -30,14 +30,22 @@ public:
         const auto now = millis();
         const auto elapsed = now - m_last_tick;
         if (elapsed < m_period)
+        {
             return;
+        }
         m_last_tick = now;
         if (m_cycle >= 100)
+        {
             m_cycle = 0;
+        }
         if (m_cycle <= m_duty_cycle)
+        {
             m_led = m_c1;
+        }
         else
+        {
             m_led = m_c2;
+        }
         ++m_cycle;
         FastLED.show();
     }

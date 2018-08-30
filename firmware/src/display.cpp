@@ -28,16 +28,14 @@ void Display::set_network_status(const char* status)
     update();
 }
 
-void Display::set_status(const char* line1,
-                         const char* line2)
+void Display::set_status(const char* line1, const char* line2)
 {
     m_line1 = line1;
     m_line2 = line2;
     update();
 }
 
-void Display::set_status(const String& line1,
-                         const String& line2)
+void Display::set_status(const String& line1, const String& line2)
 {
     set_status(line1.c_str(), line2.c_str());
 }

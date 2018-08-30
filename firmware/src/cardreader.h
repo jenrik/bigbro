@@ -15,8 +15,8 @@ public:
     
 private:
     SoftwareSerial m_serial;
-    int m_switch_pin = 0;
     RDM6300 m_decoder;
+    int m_switch_pin = 0;
     bool m_card_present = false;
     String m_id;
 };
