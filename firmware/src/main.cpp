@@ -191,7 +191,8 @@ void loop()
 		print_state = IN_PROGRESS;
 		display.set_status("Print in progress", String(current_reading) + " mA");
 	}
-	// If we're not in state 1, or we're not a printer, check for a card with access
+
+	// If we're not IN_PROGRESS, or we're not a printer, check for a card with access
 	else if (card_id != last_card_id)
 	{
 		last_card_id = card_id;
@@ -257,7 +258,7 @@ void loop()
 	}
 	
 	// If it's a printer and it's just finished a print
-	else if(current_sensor_present && print_state == IN_PROGRESS)
+	else if(current_sensor_present && (!current.is_printing()) && print_state == IN_PROGRESS)
 	{
 		end_of_print_timer = millis();
 		print_state = COOLING;
