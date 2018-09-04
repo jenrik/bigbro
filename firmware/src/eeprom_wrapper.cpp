@@ -5,10 +5,12 @@ const int MACHINE_ID_SIZE = 32;
 const int API_TOKEN_OFFSET = MACHINE_ID_SIZE;
 const int API_TOKEN_SIZE = 80;
 
-const char* ssids[] = {
-    "hal9k",
+const char* ssids[] =
+{
+    "hal9k"
 };
-const char* passwords[] = {
+const char* passwords[] =
+{
     "",
 };
 
