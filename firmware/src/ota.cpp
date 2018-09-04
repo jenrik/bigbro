@@ -2,16 +2,16 @@
 
 OTA::OTA(const char* pwd_md5, const char* id, uint16_t port)
 {
-    _id = id;
-    _pwd_md5 = pwd_md5;
-    _port = port;
+    m_id = id;
+    m_pwd_md5 = pwd_md5;
+    m_port = port;
 }
 
 void OTA::begin()
 {
-    ArduinoOTA.setPort(_port);
-    ArduinoOTA.setHostname(_id);
-    ArduinoOTA.setPasswordHash(_pwd_md5);
+    ArduinoOTA.setPort(m_port);
+    ArduinoOTA.setHostname(m_id);
+    ArduinoOTA.setPasswordHash(m_pwd_md5);
 
     ArduinoOTA.onStart([]() 
     {
@@ -38,11 +38,23 @@ void OTA::begin()
     ArduinoOTA.onError([](ota_error_t error) 
     {
         Serial.printf("Error[%u]: ", error);
-        if      (error == OTA_AUTH_ERROR)       Serial.println("Auth Failed");
-        else if (error == OTA_BEGIN_ERROR)      Serial.println("Begin Failed");
-        else if (error == OTA_CONNECT_ERROR)    Serial.println("Connect Failed");
-        else if (error == OTA_RECEIVE_ERROR)    Serial.println("Receive Failed");
-        else if (error == OTA_END_ERROR)        Serial.println("End Failed");
+        switch(error) {
+            case OTA_AUTH_ERROR:
+                Serial.println("Auth Failed");
+                break;
+            case OTA_BEGIN_ERROR:
+                Serial.println("Begin Failed");
+                break;
+            case OTA_CONNECT_ERROR:
+                Serial.println("Connect Failed");
+                break;
+            case OTA_RECEIVE_ERROR:
+                Serial.println("Receive Failed");
+                break;
+            case OTA_END_ERROR:
+                Serial.println("End Failed");
+                break;
+        }
     });
 
     ArduinoOTA.begin();

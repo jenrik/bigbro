@@ -170,7 +170,7 @@ void loop()
 		current_reading = current.read();
 		
 		// Round to nearest multiple of 5
-		display.set_status(String(int(floor(current_reading + 2.5))) + " mA");
+		display.set_status(String((int16_t)(floor(current_reading + 2.5))) + " mA");
 
 		// If the printer is off, recalibrate every 30min just to kill drift. May not be needed
 		if(millis() - last_calibrate > 30*60*1000)
@@ -192,55 +192,69 @@ void loop()
 		display.set_status("Print in progress", String(current_reading) + " mA");
 	}
 
+
 	// If we're not IN_PROGRESS, or we're not a printer, check for a card with access
 	else if (card_id != last_card_id)
 	{
 		last_card_id = card_id;
 
-		// If there's a card present, autheticate it
-		if (card_id.length())
-		{
-			display.set_status("Card present");
-			String message, user_name;
-			bool allowed = false;
-			int user_id = 0;
-			if (!query_permission(card_id, allowed, user_name, user_id, message))
-				display.set_status(message);
-			else
-			{   
-				if (allowed)
-				{
-					digitalWrite(PIN_RELAY, 1);
-					led.set_colour(CRGB::Green);
-				}
-				else
-				{
-					led.set_colour(CRGB::Red);
-				}
-			}
-			yield();
-			led.set_duty_cycle(50);
-			led.update();
-			String name_trunc = user_name;
-			if (name_trunc.length() > 12)
-				name_trunc = name_trunc.substring(0, 12) + String("...");
-			display.set_status(name_trunc, allowed ? "OK" : "Denied");
+        // If there's a card present, autheticate it
+        if (card_id.length())
+        {
+            display.set_status("Card present");
 
-			AcsRestClient logger("logs");
-			StaticJsonBuffer<200> jsonBuffer;
-			yield();
-			auto& root = jsonBuffer.createObject();
-			root["api_token"] = Eeprom::get_api_token();
-			auto& log = root.createNestedObject("log");
-			log["user_id"] = user_id;
-			if (allowed)
-				log["message"] = "Successful machine access";
-			else
-				log["message"] = "Machine access denied";
-			const auto status = logger.post(root);
+            String message, user_name;
+            bool allowed = false;
+            int user_id = 0;
+            if (!query_permission(card_id, allowed, user_name, user_id, message))
+            {
+                display.set_status(message);
+            }
+            else
+            {   
+                if (allowed)
+                {
+                    digitalWrite(PIN_RELAY, 1);
+                    led.set_colour(CRGB::Green);
+                }
+                else
+                {
+                    led.set_colour(CRGB::Red);
+                }
+            }
+
+            yield();
+            
+            led.set_duty_cycle(50);
+            led.update();
+            
+            String name_trunc = user_name;
+            if (name_trunc.length() > 12)
+            {
+                name_trunc = name_trunc.substring(0, 12) + String("...");
+            }
+            display.set_status(name_trunc, allowed ? "OK" : "Denied");
+
+            AcsRestClient logger("logs");
+            StaticJsonBuffer<200> jsonBuffer;
+            yield();
+            auto& root = jsonBuffer.createObject();
+            root["api_token"] = Eeprom::get_api_token();
+            auto& log = root.createNestedObject("log");
+            log["user_id"] = user_id;
+            if (allowed)
+            {
+                log["message"] = "Successful machine access";
+            }
+            else
+            {
+                log["message"] = "Machine access denied";
+            }
+            const auto status = logger.post(root);
+            
 			yield();
 
-			switch(status)
+            switch(status)
 			{
 				case 200:
 					break;
@@ -253,9 +267,36 @@ void loop()
 					display.set_status(s);
 					break;
 			}
-			yield();
-		}
-	}
+            yield();
+        }
+    }
+    // If it's a printer and it's just finished a print
+    else if(current_sensor_present && print_state == IN_PROGRESS)
+    {
+        end_of_print_timer = millis();
+        print_state = COOLING;
+    }
+    else if(print_state == COOLING && millis()-end_of_print_timer < cooldown_time)
+    { // Don't turn off the printer during this state
+        display.set_status("Cooling down", (millis()-end_of_print_timer/1000) + " seconds");
+    }
+    else if(card_id.length() == 0)
+    {
+        if (!showing_version)
+        {
+            display.set_status("No card");
+        }
+        digitalWrite(PIN_RELAY, 0);
+        led.set_colour(CRGB::Green);
+        led.set_duty_cycle(1);
+        led.set_period(10);
+    }
+
+    const auto now = millis();
+    if (now - start_tick > 5000)
+    {
+        showing_version = false;
+    }
 	
 	// If it's a printer and it's just finished a print
 	else if(current_sensor_present && (!current.is_printing()) && print_state == IN_PROGRESS)
@@ -264,7 +305,7 @@ void loop()
 		print_state = COOLING;
 	}
 	else if(print_state == COOLING && millis()-end_of_print_timer < cooldown_time)
-	{/*Don't turn off the printer during this state*/
+	{ // Don't turn off the printer during this state
 		display.set_status("Cooling down", String(int(millis()-end_of_print_timer/1000) + " seconds"));
 	}
 	else if(card_id.length() == 0)
@@ -279,31 +320,25 @@ void loop()
 		led.set_period(10);
 	}
 
-	const auto now = millis();
-	if (now - start_tick > 5000)
-		showing_version = false;
-
-	delay(1);
-	led.update();
-	yield();
-
-	if (Serial.available())
-	{
-		yield();
-		const char c = Serial.read();
-		if ((c == '\r') || (c == '\n'))
-		{
-			line[line_len] = 0;
-			line_len = 0;
-			decode_line(line);
-		}
-		else if (line_len < MAX_LINE_LENGTH)
-			line[line_len++] = c;
-		else
-		{
-			Serial.print("Line too long: ");
-			Serial.println(line);
-			line_len = 0;
-		}
-	}
+    if (Serial.available())
+    {
+        yield();
+        const char c = Serial.read();
+        if ((c == '\r') || (c == '\n'))
+        {
+            line[line_len] = 0;
+            line_len = 0;
+            decode_line(line);
+        }
+        else if (line_len < MAX_LINE_LENGTH)
+        {
+            line[line_len++] = c;
+        }
+        else
+        {
+            Serial.print("Line too long: ");
+            Serial.println(line);
+            line_len = 0;
+        }
+    }
 }

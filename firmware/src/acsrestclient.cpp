@@ -1,12 +1,10 @@
 #include "acsrestclient.h"
 
-
-
 #define SERVER "panopticon.hal9k.dk"
 #define USE_SSL 1
 
-AcsRestClient::AcsRestClient(const char* p)
-    : path(p)
+AcsRestClient::AcsRestClient(const char* p):
+    path(p)
 {
 }
 

@@ -16,7 +16,7 @@ const char* passwords[] =
 
 int Eeprom::get_nof_ssids()
 {
-    return sizeof(ssids)/sizeof(ssids[0]);
+    return sizeof(ssids) / sizeof(ssids[0]);
 }
 
 const char* Eeprom::get_ssid(int index)
@@ -37,9 +37,11 @@ String Eeprom::get_machine_id()
     {
         const auto c = static_cast<char>(EEPROM.read(MACHINE_ID_OFFSET+i));
         if (!c)
+        {
             break;
+        }
         s.concat(c);
-        ++i;
+        i++;
     }
     return s;
 }
@@ -51,12 +53,14 @@ void Eeprom::set_machine_id(const char* id)
         Serial.println("ERROR: Machine ID too long");
         return;
     }
+
     int i = 0;
     while (i < strlen(id))
     {
         EEPROM.write(MACHINE_ID_OFFSET+i, id[i]);
-        ++i;
+        i++;
     }
+
     EEPROM.write(MACHINE_ID_OFFSET+i, 0);
     EEPROM.commit();
 }
@@ -65,14 +69,18 @@ String Eeprom::get_api_token()
 {
     String s;
     int i = 0;
+
     while (i < API_TOKEN_SIZE)
     {
         const auto c = static_cast<char>(EEPROM.read(API_TOKEN_OFFSET+i));
         if (!c)
+        {
             break;
+        }
         s.concat(c);
         ++i;
     }
+
     return s;
 }
 
@@ -84,12 +92,14 @@ void Eeprom::set_api_token(const char* token)
         Serial.println("ERROR: API token too long");
         return;
     }
+
     int i = 0;
     while (i < strlen(token))
     {
         EEPROM.write(API_TOKEN_OFFSET+i, token[i]);
-        ++i;
+        i++;
     }
+    
     EEPROM.write(API_TOKEN_OFFSET+i, 0);
     EEPROM.commit();
 }

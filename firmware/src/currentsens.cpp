@@ -2,24 +2,24 @@
 
 Current::Current(uint8_t pin, int8_t debug_pin, uint16_t threshold)
 {
-    _pin = pin;
-    _threshold = threshold;
+    m_pin = pin;
+    m_threshold = threshold;
 
-    pinMode(_pin, INPUT);
+    pinMode(m_pin, INPUT);
     
     if(debug_pin >= 0)
     {
-        _debug_pin = debug_pin;
-        pinMode(_debug_pin, OUTPUT);
+        m_debug_pin = debug_pin;
+        pinMode(m_debug_pin, OUTPUT);
     }
 }
 
 bool Current::sensor_present()
 {
     uint16_t average_reading = 0;
-    for(uint8_t i=0; i<50; i++)
+    for(uint8_t i = 0; i < 50; i++)
     {
-        average_reading += analogRead(_pin);
+        average_reading += analogRead(m_pin);
         delay(5); // Delay serves as a yield as well
     }
     average_reading /= 50;
@@ -32,13 +32,13 @@ bool Current::sensor_present()
 
 bool Current::is_printing()
 {
-    if(read() < _threshold  &&  millis() - _last_above_thresh > _max_below_time)
+    if(read() < m_threshold && (millis() - m_last_above_thresh) > m_max_below_time)
     {
         return false;
     }
-    else if(read() > _threshold)
+    else if(read() > m_threshold)
     {
-        _last_above_thresh = millis();
+        m_last_above_thresh = millis();
     }
     
     return true;
@@ -46,11 +46,11 @@ bool Current::is_printing()
 
 void Current::handle()
 {
-    if(_debug_pin >= 0)
+    if(m_debug_pin >= 0)
     {
         // Send a pulse to show how often analog is sampled.
-        digitalWrite(_debug_pin, HIGH);
-        digitalWrite(_debug_pin, LOW);
+        digitalWrite(m_debug_pin, HIGH);
+        digitalWrite(m_debug_pin, LOW);
     }
     sample();
 }
@@ -60,72 +60,50 @@ void Current::calibrate()
     uint32_t calibrate_start = millis();
     while(millis() - calibrate_start < 5000)
     {
-        yield();
+        delay(0);
         handle();
     }
-    _error = _p2p();
-    //Serial.print("Error: ");Serial.println(_error);
+    m_error = m_p2p();
 }
 
 uint16_t Current::read()
 {
-    return (_p2p() - _error) * _v_range/1024 * _mv_per_A/1000 ;
-}
-
-void Current::set_range(uint16_t range)
-{
-    _v_range = range;
-}
-
-void Current::set_mv_A(uint16_t mv_per)
-{
-    _mv_per_A  =  mv_per;
+    return (m_p2p() - m_error) * m_v_range/1024 * m_mv_per_A/1000;
 }
 
 void Current::sample()
 {
 
-    if(_raw_sample_offset >= _raw_sample_size)
+    if(m_raw_sample_offset >= m_raw_sample_size)
     {
-        _raw_sample_offset = 0;
+        m_raw_sample_offset = 0;
     }
 
-    if(millis() - _last_sample > _sample_period)
+    if(millis() - m_last_sample > m_sample_period)
     {
-        _last_sample = millis();
-        _raw_samples[_raw_sample_offset] = analogRead(A0);
-        _raw_sample_offset++;
+        m_last_sample = millis();
+        m_raw_samples[m_raw_sample_offset] = analogRead(A0);
+        m_raw_sample_offset++;
     }
 }
 
 // Private functions
 
-uint16_t Current::_p2p()
+uint16_t Current::m_p2p()
 {
     uint16_t max = 0, min = -1;
 
-    for(uint16_t i=0; i<_raw_sample_size; i++)
+    for(uint16_t i = 0; i < m_raw_sample_size; i++)
     {
-        if(_raw_samples[i] < min)
+        if(m_raw_samples[i] < min)
         {
-            min = _raw_samples[i];
+            min = m_raw_samples[i];
         }
-        else if(_raw_samples[i] > max)
+        else if(m_raw_samples[i] > max)
         {
-            max = _raw_samples[i];
+            max = m_raw_samples[i];
         }
         yield();
     }
     return max - min;
-}
-
-uint32_t serial_limiter;
-void Current::debug_print()
-{
-    if(millis() - serial_limiter > 1000)
-    {
-        serial_limiter = millis();
-        Serial.println(_p2p());
-    }
-    
 }
