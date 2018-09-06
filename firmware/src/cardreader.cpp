@@ -1,6 +1,7 @@
 #include "cardreader.h"
-
 #include "display.h"
+
+#define SERIAL_DBG 1
 
 CardReader::CardReader(int rx_pin, int tx_pin, int sw_pin):
     m_serial(rx_pin, tx_pin),
@@ -22,14 +23,13 @@ void CardReader::update()
     {
         if (m_decoder.add_byte(c))
         {
-            const auto id = m_decoder.get_id();
+            m_id = m_decoder.get_id();
             #if SERIAL_DBG
             Serial.print("ID: ");
-            Serial.println(id);
+            Serial.println(m_id);
             #endif
             if (switch_on)
             {
-                m_id = id;
                 #if SERIAL_DBG
                 Serial.println("Saved");
                 #endif
