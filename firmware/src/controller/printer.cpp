@@ -21,21 +21,20 @@ bool PrinterController::relay_check()
     switch(print_state)
     {
         case IDLE:
-           idle(); 
-            break;
+            return idle(); 
         case IN_PROGRESS:
             in_progress();
-            break;
+            return true;
         case COOLING:
             cooling();
-            break;
+            return true;
         default:
             Serial.println("wat");
-            break;
+            return false;
     }
 }
 
-void PrinterController::idle()
+bool PrinterController::idle()
 {
     if(new_card())
     {
@@ -55,20 +54,23 @@ void PrinterController::idle()
         display.set_status("IDLE", 2);
     }
 
-    if(has_allowed_card && !get_relay())
-    {
-        set_relay(true);
-    }
-    else if(!has_allowed_card)
-    {
-        set_relay(false);
-    }
-
     if(current.is_printing() && has_allowed_card)
     {
         print_state = IN_PROGRESS;
         display.set_status("PRINTING");
     }
+
+    if(has_allowed_card && !get_relay())
+    {
+        return true;
+    }
+    else if(!has_allowed_card)
+    {
+        return false;
+    }
+
+    // Code will reach here if the relay is on, and has_allowed_card == true
+    return true;
 }
 
 void PrinterController::in_progress()
@@ -77,6 +79,7 @@ void PrinterController::in_progress()
     {
         end_of_print_timer = millis();
         print_state = COOLING;
+        display.set_status("COOLING");
         return;
     }
     
@@ -93,6 +96,24 @@ void PrinterController::cooling()
         print_state = IDLE;
     }
 
+    uint8_t minutes_left = ceil( (double) (cooldown_time - (millis() - end_of_print_timer)) /1000.0/60.0);
+    if(minutes_left != last_minutes_left)
+    {
+        last_minutes_left = minutes_left;
+        display.set_status(String(minutes_left) + " min left", 2);
+    }
+
+    if(new_card())
+    {
+        Serial.println("new card");
+        has_allowed_card = card_allowed();
+    }
+
+    if(current.is_printing() && has_allowed_card)
+    {
+        print_state = IN_PROGRESS;
+        display.set_status("PRINTING");
+    }
 }
 
 void PrinterController::update()
