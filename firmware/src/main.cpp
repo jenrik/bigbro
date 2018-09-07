@@ -1,10 +1,10 @@
 #include "main.h"
 
-ACSController* controller;
+PrinterController* controller;
 
 void setup()
 {
-	controller = new ACSController();
+	controller = new PrinterController;
 }
 void loop()
 {

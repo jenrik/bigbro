@@ -30,8 +30,14 @@ BaseController::BaseController(const char* psw_md5):
 	delay(1000);
 }
 
-void BaseController::set_relay(bool state) {
+void BaseController::set_relay(bool state) 
+{
 	digitalWrite(PIN_RELAY, state ? HIGH : LOW);
+}
+
+bool BaseController::get_relay()
+{
+	digitalRead(PIN_RELAY);
 }
 
 void BaseController::decode_line(const char* line)

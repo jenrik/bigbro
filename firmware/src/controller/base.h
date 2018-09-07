@@ -44,6 +44,7 @@ protected:
     int log_access(char* msg, int user_id);
 
     void set_relay(bool state);
+    bool get_relay();
 
 private:
     void decode_line(const char* line);

@@ -1,14 +1,6 @@
 #pragma once
 
 #include <controller/base.h>
-#include <currentsens.h>
-
-#define PIN_TX          11
-#define PIN_RX          14
-#define PIN_SWITCH      12
-#define PIN_CURRENT     A0
-#define PIN_DEBUG       -1
-#define CURRENT_THRESH  200
 
 class ACSController: public BaseController
 {
@@ -19,25 +11,21 @@ public:
 
     bool relay_check();
 
-private:
+protected:
     CardReader reader;
+
     String last_card_id;
-    bool has_card = false;
+    String card_id;
+
+    uint8_t pin_tx = 11, pin_rx = 14, pin_switch = 12;
+
     bool has_allowed_card = false;
 
-    Current current;
+    bool has_card();
+    bool new_card();
+    bool card_allowed();
 
+private:
     unsigned long start_tick = millis();
     bool showing_version = true;
-
-    bool current_sensor_present = false;
-
-    // Printer specific variables
-    uint32_t        last_calibrate;
-    uint32_t        end_of_print_timer;
-    const uint32_t  cooldown_time = 5*60*1000; // 5
-    uint16_t        last_current_reading, current_reading;
-
-    enum PrintState { STARTED, IN_PROGRESS, COOLING };
-    PrintState print_state = STARTED;
 };
