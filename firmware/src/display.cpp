@@ -40,6 +40,27 @@ void Display::set_status(const String& line1, const String& line2)
     set_status(line1.c_str(), line2.c_str());
 }
 
+void Display::set_status(const char* line_txt, uint8_t line_nr)
+{
+    switch(line_nr)
+    {
+        case 1:
+            m_line1 = line_txt;
+            break;
+        case 2:
+            m_line2 = line_txt;
+            break;
+        default:
+            break;
+    }
+    update();
+}
+
+void Display::set_status(const String& line_txt, uint8_t line_nr)
+{
+    set_status(line_txt.c_str(), line_nr);
+}
+
 void Display::update()
 {
     m_display->clearBuffer();

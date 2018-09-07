@@ -2,7 +2,6 @@
 
 #include <controller/acs.h>
 #include <currentsens.h>
-
 class PrinterController: public ACSController
 {
 public:

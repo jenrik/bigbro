@@ -64,13 +64,14 @@ bool ACSController::card_allowed()
 			led.set_colour(CRGB::Green);
 		}
 		else
-		{
+		{	
+			// Also Denied
 			led.set_colour(CRGB::Red);
 		}
 	}
 	else
 	{   
-		// Denied
+		// Denied due to error
 		display.set_status(message);
 	}
 
@@ -97,6 +98,7 @@ bool ACSController::card_allowed()
 	
 	yield();
 
+	// Status of log attempts
 	switch(status)
 	{
 		case 200:
