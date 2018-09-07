@@ -2,7 +2,6 @@
 
 PrinterController::PrinterController(): 
   ACSController(),
-  ACSController::reader(ACSController::pin_rx, ACSController::pin_tx, AcsRestClient::pin_switch),
   current(pin_current, pin_debug, current_threshhold)
 {
     current_sensor_present = current.sensor_present();
@@ -138,7 +137,7 @@ void PrinterController::idle()
         set_relay(false);
     }
 
-    if(currnet.is_printing() && has_allowed_card)
+    if(current.is_printing() && has_allowed_card)
     {
         print_state = IN_PROGRESS;
     }
