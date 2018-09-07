@@ -54,7 +54,7 @@ void Eeprom::set_machine_id(const char* id)
         return;
     }
 
-    int i = 0;
+    uint8_t i = 0;
     while (i < strlen(id))
     {
         EEPROM.write(MACHINE_ID_OFFSET+i, id[i]);
@@ -93,7 +93,7 @@ void Eeprom::set_api_token(const char* token)
         return;
     }
 
-    int i = 0;
+    uint8_t i = 0;
     while (i < strlen(token))
     {
         EEPROM.write(API_TOKEN_OFFSET+i, token[i]);

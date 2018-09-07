@@ -37,7 +37,7 @@ void BaseController::set_relay(bool state)
 
 bool BaseController::get_relay()
 {
-	digitalRead(PIN_RELAY);
+	return digitalRead(PIN_RELAY);
 }
 
 void BaseController::decode_line(const char* line)
@@ -121,10 +121,10 @@ bool BaseController::query_permission(const String& card_id,
 			auto resp = rc.get_response();
 			
 			// Remove garbage (why is it there?)
-			int i = 0;
+			uint16_t i = 0;
 			while ((resp[i] != '{') && (i < resp.length()))
 				++i;
-			int j = i;
+			uint16_t j = i;
 			while ((resp[j] != '}') && (j < resp.length()))
 				++j;
 			resp = resp.substring(i, j+1);
@@ -192,7 +192,7 @@ void BaseController::update()
 	set_relay(relay_check());
 }
 
-int BaseController::log_access(char* msg, int user_id)
+int BaseController::log_access(const char* msg, int user_id)
 {
 	AcsRestClient logger("logs");
 	StaticJsonBuffer<200> jsonBuffer;

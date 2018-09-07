@@ -26,7 +26,7 @@ public:
 
     void update();
 
-    virtual bool relay_check() {};
+    virtual bool relay_check() = 0; // Define as pure virtual function
 
 protected:
     Display display;
@@ -41,7 +41,7 @@ protected:
 					  int& user_id,
 					  String& message);
 
-    int log_access(char* msg, int user_id);
+    int log_access(const char* msg, int user_id);
 
     void set_relay(bool state);
     bool get_relay();
