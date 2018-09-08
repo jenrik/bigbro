@@ -28,6 +28,8 @@ public:
 
     virtual bool relay_check() = 0; // Define as pure virtual function
 
+    virtual void test_command();
+
 protected:
     Display display;
     Led<PIN_LED> led;

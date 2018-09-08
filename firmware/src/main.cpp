@@ -1,10 +1,12 @@
 #include "main.h"
 
-PrinterController* controller;
+BaseController* controller;
 
 void setup()
 {
-	controller = new PrinterController;
+	//controller = new ACSController();
+	controller = new PrinterController();
+	//controller = new CameraController();
 }
 void loop()
 {
