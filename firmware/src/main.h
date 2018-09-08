@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <controller/base.h>
-#include <controller/acs.h>
-#include <controller/camera.h>
-#include <controller/printer.h>
+#include <controllers/base.h>
+#include <controllers/acs.h>
+#include <controllers/camera.h>
+#include <controllers/printer.h>

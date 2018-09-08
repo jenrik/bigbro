@@ -1,4 +1,4 @@
-#include <controller/printer.h>
+#include <controllers/printer.h>
 
 PrinterController::PrinterController(): 
   ACSController(),

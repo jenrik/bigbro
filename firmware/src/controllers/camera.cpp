@@ -1,4 +1,4 @@
-#include <controller/camera.h>
+#include <controllers/camera.h>
 
 CameraController::CameraController(const unsigned long query_interval):
   BaseController(),
