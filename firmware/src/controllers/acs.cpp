@@ -9,14 +9,16 @@ bool ACSController::relay_check()
 {
 	if (new_card())
 	{
+		#if SERIAL_DBG
+		Serial.print("New card: ");
+		Serial.println(get_card());
+		#endif
+
 		has_allowed_card = false;
 		if(has_card())
-		{
-			Serial.println("new card");
+		{			
 			display.set_status("Card present");
-
 			has_allowed_card = card_allowed();
-
 		}
 		else
 		{
@@ -50,8 +52,16 @@ bool ACSController::new_card()
 	return new_card;
 }
 
+String& ACSController::get_card()
+{
+	return card_id;
+}
+
 bool ACSController::card_allowed()
 {
+	#if SERIAL_DBG
+	Serial.println("Checking card");
+	#endif
 	String message, user_name;
 	int user_id = 0;
 	bool allowed = false;
@@ -89,10 +99,16 @@ bool ACSController::card_allowed()
 	int status;
 	if (allowed)
 	{
+		#if SERIAL_DBG
+		Serial.print("Card allowed: "); Serial.println(user_name);
+		#endif
 		status = log_access("Successful machine access", user_id);
 	}
 	else
 	{
+		#if SERIAL_DBG
+		Serial.print("Card denied: "); Serial.println(message);
+		#endif
 		status = log_access("Machine access denied", user_id);
 	}
 	
@@ -114,5 +130,72 @@ bool ACSController::card_allowed()
 	}
 	yield();
 
+	#if SERIAL_DBG
+	Serial.print("Status: "); Serial.println(status);
+	#endif
+
 	return allowed; 
+}
+
+bool BaseController::query_permission(const String& card_id,
+					  bool& allowed,
+					  String& user_name,
+					  int& user_id,
+					  String& message)
+{
+	user_name = "";
+	allowed = false;
+	
+	AcsRestClient rc("permissions");
+	
+	StaticJsonBuffer<200> jsonBuffer;
+	auto& root = jsonBuffer.createObject();
+	root["api_token"] = Eeprom::get_api_token();
+	root["card_id"] = card_id;
+
+	const int status = rc.post(root);
+	Serial.print("HTTP status ");
+	Serial.println(status);
+
+	switch (status) {
+		case 200:
+		{
+			auto resp = rc.get_response();
+			
+			// Remove garbage (why is it there?)
+			uint16_t i = 0;
+			while ((resp[i] != '{') && (i < resp.length()))
+				++i;
+			uint16_t j = i;
+			while ((resp[j] != '}') && (j < resp.length()))
+				++j;
+			resp = resp.substring(i, j+1);
+
+			StaticJsonBuffer<200> jsonBuffer;
+			auto& json_resp = jsonBuffer.parseObject(resp);
+			if (!json_resp.success())
+			{
+				Serial.println("Bad JSON:");
+				Serial.println(resp);
+				message = "Bad JSON";
+			}
+			else
+			{
+				allowed = json_resp["allowed"];
+				user_name = (const char*) json_resp["name"];
+				user_id = json_resp["id"];
+			}
+			return true;
+		}
+		
+		case 404:
+			message = "Unknown card";
+			allowed = false;
+			return true;
+	}
+
+	String s = "Bad HTTP reply:";
+	s += String(status);
+	message = s;
+	return false;
 }

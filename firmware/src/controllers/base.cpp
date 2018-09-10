@@ -98,69 +98,6 @@ void BaseController::test_command()
 	}
 }
 
-bool BaseController::query_permission(const String& card_id,
-					  bool& allowed,
-					  String& user_name,
-					  int& user_id,
-					  String& message)
-{
-	user_name = "";
-	allowed = false;
-	
-	AcsRestClient rc("permissions");
-	
-	StaticJsonBuffer<200> jsonBuffer;
-	auto& root = jsonBuffer.createObject();
-	root["api_token"] = Eeprom::get_api_token();
-	root["card_id"] = card_id;
-
-	const int status = rc.post(root);
-	Serial.print("HTTP status ");
-	Serial.println(status);
-
-	switch (status) {
-		case 200:
-		{
-			auto resp = rc.get_response();
-			
-			// Remove garbage (why is it there?)
-			uint16_t i = 0;
-			while ((resp[i] != '{') && (i < resp.length()))
-				++i;
-			uint16_t j = i;
-			while ((resp[j] != '}') && (j < resp.length()))
-				++j;
-			resp = resp.substring(i, j+1);
-
-			StaticJsonBuffer<200> jsonBuffer;
-			auto& json_resp = jsonBuffer.parseObject(resp);
-			if (!json_resp.success())
-			{
-				Serial.println("Bad JSON:");
-				Serial.println(resp);
-				message = "Bad JSON";
-			}
-			else
-			{
-				allowed = json_resp["allowed"];
-				user_name = (const char*) json_resp["name"];
-				user_id = json_resp["id"];
-			}
-			return true;
-		}
-		
-		case 404:
-			message = "Unknown card";
-			allowed = false;
-			return true;
-	}
-
-	String s = "Bad HTTP reply:";
-	s += String(status);
-	message = s;
-	return false;
-}
-
 void BaseController::handleSerial()
 {
 	if (Serial.available())

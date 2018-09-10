@@ -23,7 +23,13 @@ protected:
 
     bool has_card();
     bool new_card();
+    String get_card();
     bool card_allowed();
+    bool query_permission(const String& card_id,
+					  bool& allowed,
+					  String& user_name,
+					  int& user_id,
+					  String& message);
 
 private:
     unsigned long start_tick = millis();
