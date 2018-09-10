@@ -7,7 +7,9 @@ PrinterController::PrinterController():
     current_sensor_present = current.sensor_present();
 	if(current_sensor_present)
 	{
+        #if SERIAL_DBG
 		Serial.println("Current sensor present");
+        #endif
 		// Calibrate current offset
 		display.set_status("Calibrating");
 		delay(2000); // Delay to allow things to settle
@@ -29,7 +31,9 @@ bool PrinterController::relay_check()
             cooling();
             return true;
         default:
+            #if SERIAL_DBG
             Serial.println("wat");
+            #endif
             return false;
     }
 }
@@ -38,7 +42,6 @@ bool PrinterController::idle()
 {
     if(new_card())
     {
-        Serial.println("new card");
         has_allowed_card = card_allowed();
     }
 
@@ -56,6 +59,9 @@ bool PrinterController::idle()
 
     if(current.is_printing() && has_allowed_card)
     {
+        #if SERIAL_DBG
+        Serial.println("State changed=> PRINTING");
+	    #endif
         print_state = IN_PROGRESS;
         display.set_status("PRINTING");
     }
@@ -77,6 +83,9 @@ void PrinterController::in_progress()
 {
     if(!current.is_printing())
     {
+        #if SERIAL_DBG
+        Serial.println("State changed=> COOLING");
+	    #endif
         end_of_print_timer = millis();
         print_state = COOLING;
         display.set_status("COOLING");
@@ -93,6 +102,9 @@ void PrinterController::cooling()
 {
     if(millis() - end_of_print_timer > cooldown_time)
     {
+        #if SERIAL_DBG
+        Serial.println("State changed=> IDLE");
+	    #endif
         print_state = IDLE;
     }
 
@@ -105,12 +117,14 @@ void PrinterController::cooling()
 
     if(new_card())
     {
-        Serial.println("new card");
         has_allowed_card = card_allowed();
     }
 
     if(current.is_printing() && has_allowed_card)
     {
+        #if SERIAL_DBG
+        Serial.println("State changed=> PRINTING");
+	    #endif
         print_state = IN_PROGRESS;
         display.set_status("PRINTING");
     }

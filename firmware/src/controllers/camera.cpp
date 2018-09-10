@@ -5,8 +5,8 @@ CameraController::CameraController(const unsigned long query_interval):
   c_query_interval(query_interval)
 {}
 
-bool CameraController::query_camera_state(bool& state,
-                         String& message) {
+bool CameraController::query_camera_state(bool& state, String& message) 
+{
     AcsRestClient rc("camera");
     
     StaticJsonBuffer<200> jsonBuffer;
@@ -15,10 +15,13 @@ bool CameraController::query_camera_state(bool& state,
 
     const auto status = rc.post(root);
     led.update();
+    #if SERIAL_DBG
     Serial.print("HTTP status: ");
     Serial.println(status);
+    #endif
 
-    if (status == 200) {
+    if (status == 200) 
+    {
         String resp = rc.get_response();
 
         // Remove garbage (why is it there?)
@@ -32,9 +35,12 @@ bool CameraController::query_camera_state(bool& state,
 
         StaticJsonBuffer<200> jsonBuffer;
         auto& json_resp = jsonBuffer.parseObject(resp);
-        if (!json_resp.success()) {
+        if (!json_resp.success()) 
+        {
+            #if SERIAL_DBG
             Serial.println("Bad JSON:");
             Serial.println(resp);
+            #endif
             message = "Bad JSON";
         } else {
             state = json_resp["state"];

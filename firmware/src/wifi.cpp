@@ -21,13 +21,17 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
     {
         led.update();
 
+        #if SERIAL_DBG
         Serial.println();
         Serial.println();
+        #endif
         const auto ssid = Eeprom::get_ssid(index);
         String s = "Trying ";
         s += ssid;
         disp.set_network_status(s.c_str());
+        #if SERIAL_DBG
         Serial.println(s);
+        #endif
 
         WiFi.begin(ssid, Eeprom::get_password(index));
         
@@ -51,10 +55,12 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
         {
             const auto token = Eeprom::get_api_token();
             disp.set_network_status(token.length() ? "Online" : "(online)");
-            
+
+            #if SERIAL_DBG
             Serial.println("");
             Serial.print("Connected to ");
             Serial.println(ssid);
+            #endif
 
             led.set_colour(CRGB::Green);
             led.set_duty_cycle(1);
@@ -63,7 +69,10 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
             break;
         }
 
+        #if SERIAL_DBG
         Serial.println("");
+        #endif
+
         index++;
         if (index >= Eeprom::get_nof_ssids())
         {
@@ -76,6 +85,7 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
     // Print the IP address
     Serial.println(WiFi.localIP());
 
+    
     led.update();
 
     // Set up mDNS responder

@@ -37,12 +37,6 @@ protected:
     OTA ota; // OTA: Default ID and port, 123 for password.
     // Note: password hashes can be computed using the following commands: echo -n 123 | md5sum
 
-    bool query_permission(const String& card_id,
-					  bool& allowed,
-					  String& user_name,
-					  int& user_id,
-					  String& message);
-
     int log_access(const char* msg, int user_id);
 
     void set_relay(bool state);

@@ -154,10 +154,8 @@ bool BaseController::query_permission(const String& card_id,
 	root["card_id"] = card_id;
 
 	const int status = rc.post(root);
-	Serial.print("HTTP status ");
-	Serial.println(status);
-
-	switch (status) {
+	switch (status) 
+	{
 		case 200:
 		{
 			auto resp = rc.get_response();
@@ -175,8 +173,9 @@ bool BaseController::query_permission(const String& card_id,
 			auto& json_resp = jsonBuffer.parseObject(resp);
 			if (!json_resp.success())
 			{
-				Serial.println("Bad JSON:");
-				Serial.println(resp);
+				#if SERIAL_DBG
+				Serial.print("Bad JSON: "); Serial.println(resp);
+				#endif
 				message = "Bad JSON";
 			}
 			else

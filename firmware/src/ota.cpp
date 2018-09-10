@@ -22,23 +22,31 @@ void OTA::begin()
             type = "filesystem";
         
         // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+        #if SERIAL_DBG
         Serial.println("Start updating " + type);
+        #endif
     });
         
     ArduinoOTA.onEnd([]() 
     {
+        #if SERIAL_DBG
         Serial.println("\nEnd");
+        #endif
     });
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) 
     {
+        #if SERIAL_DBG
         Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+        #endif
     });
 
     ArduinoOTA.onError([](ota_error_t error) 
     {
+        #if SERIAL_DBG
         Serial.printf("Error[%u]: ", error);
-        switch(error) {
+        switch(error) 
+        {
             case OTA_AUTH_ERROR:
                 Serial.println("Auth Failed");
                 break;
@@ -55,6 +63,7 @@ void OTA::begin()
                 Serial.println("End Failed");
                 break;
         }
+        #endif
     });
 
     ArduinoOTA.begin();

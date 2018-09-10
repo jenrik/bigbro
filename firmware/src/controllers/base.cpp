@@ -5,10 +5,13 @@ const char* VERSION = "0.1.2";
 BaseController::BaseController(const char* psw_md5):
   	ota(psw_md5)
 {
-    Serial.begin(115200);
+	Serial.begin(115200);
+
+	#if SERIAL_DBG
 	Serial.print("Machine v ");
 	Serial.println(VERSION);
-
+	#endif
+	
 	pinMode(PIN_RELAY, OUTPUT);
 	set_relay(false);
 
