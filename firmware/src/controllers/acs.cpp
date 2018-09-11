@@ -52,7 +52,7 @@ bool ACSController::new_card()
 	return new_card;
 }
 
-String& ACSController::get_card()
+String ACSController::get_card()
 {
 	return card_id;
 }
@@ -137,7 +137,7 @@ bool ACSController::card_allowed()
 	return allowed; 
 }
 
-bool BaseController::query_permission(const String& card_id,
+bool ACSController::query_permission(const String& card_id,
 					  bool& allowed,
 					  String& user_name,
 					  int& user_id,
@@ -197,4 +197,22 @@ bool BaseController::query_permission(const String& card_id,
 	s += String(status);
 	message = s;
 	return false;
+}
+
+void ACSController::test_command()
+{
+	Serial.println("Sending test request");
+	String message, user_name;
+	bool allowed = false;
+	int user_id = 0;
+	if (!query_permission("0000BB96C5", allowed, user_name, user_id, message))
+	{
+		Serial.print("Error: ");
+		Serial.println(message);
+	}
+	else
+	{
+		Serial.print("Success: User ");
+		Serial.println(user_name);
+	}
 }

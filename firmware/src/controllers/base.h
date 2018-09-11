@@ -28,7 +28,7 @@ public:
 
     virtual bool relay_check() = 0; // Define as pure virtual function
 
-    virtual void test_command();
+    virtual void test_command() = 0;
 
 protected:
     Display display;

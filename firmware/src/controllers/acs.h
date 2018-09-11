@@ -11,6 +11,8 @@ public:
 
     bool relay_check();
 
+    void test_command();
+
 protected:
     CardReader reader;
 

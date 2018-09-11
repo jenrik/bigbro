@@ -83,24 +83,6 @@ void BaseController::decode_line(const char* line)
 	}
 }
 
-void BaseController::test_command()
-{
-	Serial.println("Sending test request");
-	String message, user_name;
-	bool allowed = false;
-	int user_id = 0;
-	if (!query_permission("0000BB96C5", allowed, user_name, user_id, message))
-	{
-		Serial.print("Error: ");
-		Serial.println(message);
-	}
-	else
-	{
-		Serial.print("Success: User ");
-		Serial.println(user_name);
-	}
-}
-
 void BaseController::handleSerial()
 {
 	if (Serial.available())
