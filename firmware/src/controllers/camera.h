@@ -17,5 +17,5 @@ protected:
 private:
     const unsigned long c_query_interval;
     unsigned long last_check_tick = 0;
-    bool state = false;
+    bool state = true;
 };

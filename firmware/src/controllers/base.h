@@ -17,10 +17,12 @@
 #define PIN_RELAY       15
 #define MAX_LINE_LENGTH 80
 
+#define OTA_PSW "202cb962ac59075b964b07152d234b70"
+
 class BaseController
 {
 public:
-    BaseController(const char* psw_md5 = "202cb962ac59075b964b07152d234b70");
+    BaseController(const char* psw_md5 = OTA_PSW, const bool relay_upstart = false);
 
     void update();
 

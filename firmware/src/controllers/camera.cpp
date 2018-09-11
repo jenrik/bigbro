@@ -1,7 +1,7 @@
 #include <controllers/camera.h>
 
 CameraController::CameraController(const unsigned long query_interval):
-  BaseController(),
+  BaseController(OTA_PSW, true),
   c_query_interval(query_interval)
 {}
 
@@ -68,17 +68,16 @@ bool CameraController::relay_check()
         String message;
         bool status = true;
         if (!query_camera_state(status, message)) {
-                display.set_status(message);
             // Fail-safe: activate cameras
             #if SERIAL_DBG
             Serial.println("fail-safe mode enabled");
             #endif
-            display.set_status("ON, FAIL-SAFE mode");
+            display.set_status("ON, FAIL-SAFE mode", message);
             led.set_colour(CRGB::Red);
             led.set_duty_cycle(50);
             led.set_period(1);
             led.update();
-            return true;
+            state = true;
         } else {
             state = status;
             if (status) {

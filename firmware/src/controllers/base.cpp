@@ -2,7 +2,7 @@
 
 const char* VERSION = "0.1.2";
 
-BaseController::BaseController(const char* psw_md5):
+BaseController::BaseController(const char* psw_md5, const bool relay_upstart):
   	ota(psw_md5)
 {
 	Serial.begin(115200);
@@ -13,7 +13,7 @@ BaseController::BaseController(const char* psw_md5):
 	#endif
 	
 	pinMode(PIN_RELAY, OUTPUT);
-	set_relay(false);
+	set_relay(relay_upstart);
 
 	led.update();
 
