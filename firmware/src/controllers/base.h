@@ -2,8 +2,6 @@
 
 #include <Arduino.h>
 
-#define SERIAL_DBG  1
-
 #include <EEPROM.h>
 #include <ArduinoJson.h>
 #include <RestClient.h>

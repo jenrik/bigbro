@@ -1,8 +1,6 @@
 #include "cardreader.h"
 #include "display.h"
 
-#define SERIAL_DBG 1
-
 CardReader::CardReader(int rx_pin, int tx_pin, int sw_pin):
     m_serial(rx_pin, tx_pin),
     m_switch_pin(sw_pin)
