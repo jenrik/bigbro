@@ -14,6 +14,9 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
     led.set_duty_cycle(10);
     led.set_period(1);
 
+    String dns_name = "machine-";
+    dns_name += Eeprom::get_machine_id();
+    WiFi.hostname(dns_name);
     WiFi.mode(WIFI_STA);
 
     int index = 0;
@@ -89,8 +92,6 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
     led.update();
 
     // Set up mDNS responder
-    String dns_name = "machine-";
-    dns_name += Eeprom::get_machine_id();
     if (!m_mdns.begin(dns_name.c_str()))
     {
         Serial.println("Error setting up mDNS responder!");
