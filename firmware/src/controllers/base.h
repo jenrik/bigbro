@@ -15,7 +15,7 @@
 
 #define PIN_LED         14
 #define PIN_RELAY       15
-#define MAX_LINE_LENGTH 80
+#define MAX_LINE_LENGTH 100
 
 #define OTA_PSW "202cb962ac59075b964b07152d234b70"
 

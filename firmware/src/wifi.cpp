@@ -4,12 +4,13 @@
 #include "display.h"
 #include "led.h"
 
-WiFiHandler::WiFiHandler()
+WiFiHandler::WiFiHandler(uint8_t max_tries)
 {
+    m_max_tries = max_tries;
 }
 
-void WiFiHandler::init(AbstractLed& led, Display& disp)
-{
+bool WiFiHandler::init(AbstractLed& led, Display& disp)
+{    
     led.set_colour(CRGB::Orange);
     led.set_duty_cycle(10);
     led.set_period(1);
@@ -19,67 +20,78 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
     WiFi.hostname(dns_name);
     WiFi.mode(WIFI_STA);
 
-    int index = 0;
-    while (1)
+    uint8_t ssid_count = Eeprom::get_nof_ssids();
+    bool connected = false;
+
+    #if SERIAL_DBG
+	Serial.print("cnt: ");
+	Serial.println(ssid_count);
+	#endif
+
+    if(ssid_count == 0 || ssid_count == 255)
     {
-        led.update();
-
         #if SERIAL_DBG
-        Serial.println();
-        Serial.println();
+        Serial.println("No SSIDs set up");
         #endif
-        const auto ssid = Eeprom::get_ssid(index);
-        String s = "Trying ";
-        s += ssid;
-        disp.set_network_status(s.c_str());
+        return false;  
+    }
+
+    for(uint8_t k=0; k<m_max_tries && !connected; k++)
+    {
         #if SERIAL_DBG
-        Serial.println(s);
+        Serial.print("\nTry: "); Serial.print(k+1); Serial.print("/"); Serial.println(m_max_tries);
         #endif
 
-        WiFi.begin(ssid, Eeprom::get_password(index));
-        
-        led.update();
-
-        bool connected = false;
-        uint32_t connection_start = millis();
-        while (millis() - connection_start < 5000)
+        for(uint8_t i=0; i<ssid_count && !connected; i++)
         {
-            delay(0);
-            led.update();
-
-            if (WiFi.status() == WL_CONNECTED)
-            {
-                connected = true;
-                break;
-            }
-        }
-
-        if (connected)
-        {
-            const auto token = Eeprom::get_api_token();
-            disp.set_network_status(token.length() ? "Online" : "(online)");
-
             #if SERIAL_DBG
-            Serial.println("");
-            Serial.print("Connected to ");
-            Serial.println(ssid);
+            Serial.print(" SSID: "); Serial.print(i+1); Serial.print("/"); Serial.println(ssid_count);
             #endif
 
-            led.set_colour(CRGB::Green);
-            led.set_duty_cycle(1);
-            led.set_period(10);
+            led.update();
 
-            break;
-        }
+            String ssid = Eeprom::get_ssid(i);
+            String s = "Trying ";
+            s += ssid;
+            disp.set_network_status(s.c_str());
+            #if SERIAL_DBG
+            Serial.print(" ");Serial.println(s);
+            #endif
 
-        #if SERIAL_DBG
-        Serial.println("");
-        #endif
+            WiFi.begin(ssid.c_str(), Eeprom::get_password(i).c_str());
 
-        index++;
-        if (index >= Eeprom::get_nof_ssids())
-        {
-            index = 0;
+            led.update();
+            
+            uint32_t connection_start = millis();
+            while (millis() - connection_start < 10000)
+            {
+                delay(0);
+                led.update();
+
+                if (WiFi.status() == WL_CONNECTED)
+                {
+                    connected = true;
+                    break;
+                }
+            }
+
+            if (connected)
+            {
+                const auto token = Eeprom::get_api_token();
+                disp.set_network_status(token.length() ? "Online" : "(online)");
+
+                #if SERIAL_DBG
+                Serial.println("");
+                Serial.print("Connected to ");
+                Serial.println(ssid);
+                #endif
+
+                led.set_colour(CRGB::Green);
+                led.set_duty_cycle(1);
+                led.set_period(10);
+
+                break;
+            }
         }
     }
 
@@ -102,4 +114,6 @@ void WiFiHandler::init(AbstractLed& led, Display& disp)
         Serial.print("My name is ");
         Serial.println(dns_name);
     }
+
+    return connected;
 }

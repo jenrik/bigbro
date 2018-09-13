@@ -9,11 +9,12 @@ class Display;
 class WiFiHandler
 {
 public:
-    WiFiHandler();
+    WiFiHandler(uint8_t max_tries = 5);
 
-    void init(AbstractLed& led,
+    bool init(AbstractLed& led,
               Display& disp);
     
 private:
-    MDNSResponder m_mdns;    
+    MDNSResponder m_mdns;
+    uint8_t m_max_tries;
 };
