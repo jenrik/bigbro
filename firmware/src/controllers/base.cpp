@@ -105,10 +105,6 @@ void BaseController::decode_line(const char* line)
 			pass += line[i++];
 		}
 
-		#if SERIAL_DBG
-		Serial.print("SSID: "); Serial.print(ssid.c_str()); Serial.print(" PASS: "); Serial.println(pass.c_str());
-		#endif
-
 		Eeprom::set_wifi_creds(ssid.c_str(), pass.c_str());
 		return;	
 

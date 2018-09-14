@@ -13,8 +13,8 @@
 #include <wifi.h>
 #include <ota.h>
 
-#define PIN_LED         14
-#define PIN_RELAY       15
+#define PIN_LED         D7
+#define PIN_RELAY       D8
 #define MAX_LINE_LENGTH 100
 
 #define OTA_PSW "202cb962ac59075b964b07152d234b70"

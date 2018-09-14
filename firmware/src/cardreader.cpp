@@ -17,6 +17,8 @@ void CardReader::update()
     }
     
     const auto c = m_serial.read();
+    //REMOVE
+    Serial.println(c);
     if (c > 0)
     {
         if (m_decoder.add_byte(c))
