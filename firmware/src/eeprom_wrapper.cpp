@@ -1,13 +1,4 @@
-#include "Eeprom_wrapper.h"
-
-const char* ssids[] =
-{
-    "hal9k"
-};
-const char* passwords[] =
-{
-    "",
-};
+#include "eeprom_wrapper.h"
 
 void Eeprom::Eeprom_wrap_begin()
 {
