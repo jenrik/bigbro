@@ -7,11 +7,11 @@ class ACSController: public BaseController
 public:
     ACSController();
 
-    void update();
+    void update() override;
 
-    bool relay_check();
+    bool relay_check() override;
 
-    void test_command();
+    void test_command() override;
 
 protected:
     CardReader reader;

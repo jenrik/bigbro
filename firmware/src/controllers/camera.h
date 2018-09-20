@@ -7,9 +7,9 @@ class CameraController: public BaseController
 public:
     CameraController(const unsigned long query_interval = 1000);
 
-    bool relay_check();
+    bool relay_check() override;
 
-    void test_command();
+    void test_command() override;
 
 protected:
     bool query_camera_state(bool& state, String& message);

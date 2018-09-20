@@ -7,8 +7,9 @@ class PrinterController: public ACSController
 public:
     PrinterController();
 
-    void update();
-    bool relay_check();
+    void update() override;
+    
+    bool relay_check() override;
 
 private:
     Current current;

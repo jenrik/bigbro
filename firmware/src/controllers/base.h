@@ -24,7 +24,7 @@ class BaseController
 public:
     BaseController(const char* psw_md5 = OTA_PSW, const bool relay_upstart = false);
 
-    void update();
+    virtual void update();
 
     virtual bool relay_check() = 0; // Define as pure virtual function
 
