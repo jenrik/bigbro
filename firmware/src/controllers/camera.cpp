@@ -1,4 +1,7 @@
-#include <controllers/camera.h>
+#include <ArduinoJson.h>
+#include "acsrestclient.h"
+#include "eeprom_wrapper.h"
+#include "controllers/camera.h"
 
 CameraController::CameraController(const unsigned long query_interval):
   BaseController(OTA_PSW, true),

@@ -1,8 +1,6 @@
-#include "wifi.h"
-
+#include <ESP8266WiFi.h>
 #include "eeprom_wrapper.h"
-#include "display.h"
-#include "led.h"
+#include "wifi.h"
 
 WiFiHandler::WiFiHandler(uint8_t max_tries)
 {

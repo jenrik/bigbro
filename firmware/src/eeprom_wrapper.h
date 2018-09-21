@@ -1,8 +1,5 @@
 #pragma once
 
-#include <Arduino.h>
-#include <EEPROM.h>
-
 const uint16_t MACHINE_ID_OFFSET = 0;
 const uint16_t MACHINE_ID_SIZE = 32;
 const uint16_t API_TOKEN_OFFSET = MACHINE_ID_SIZE;

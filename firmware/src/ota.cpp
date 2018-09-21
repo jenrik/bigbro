@@ -1,3 +1,8 @@
+#include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
 #include "ota.h"
 
 OTA::OTA(const char* pwd_md5, const char* id, uint16_t port)

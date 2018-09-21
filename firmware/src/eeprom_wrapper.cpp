@@ -1,3 +1,5 @@
+#include <Arduino.h>
+#include <EEPROM.h>
 #include "eeprom_wrapper.h"
 
 void Eeprom::Eeprom_wrap_begin()

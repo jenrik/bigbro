@@ -1,3 +1,4 @@
+#include <RestClient.h>
 #include "acsrestclient.h"
 
 #define SERVER "panopticon.hal9k.dk"

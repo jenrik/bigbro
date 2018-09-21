@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "cardreader.h"
 #include "display.h"
 

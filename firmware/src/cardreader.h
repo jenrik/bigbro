@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Arduino.h>
 #include <RDM6300.h>
 #include <SoftwareSerial.h>
 

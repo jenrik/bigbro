@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "currentsens.h"
 
 Current::Current(uint8_t pin, int8_t debug_pin, uint16_t threshold)

@@ -1,14 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
-
-#include <EEPROM.h>
-#include <ArduinoJson.h>
-#include <RestClient.h>
-#include <acsrestclient.h>
-#include <cardreader.h>
 #include <display.h>
-#include <eeprom_wrapper.h>
 #include <led.h>
 #include <wifi.h>
 #include <ota.h>

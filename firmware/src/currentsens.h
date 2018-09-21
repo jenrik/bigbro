@@ -1,8 +1,5 @@
 #pragma once
 
-#include <Arduino.h>
-
-
 class Current
 {
     public:

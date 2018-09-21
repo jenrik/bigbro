@@ -1,6 +1,7 @@
 #pragma once
 
 #include <controllers/base.h>
+#include "cardreader.h"
 
 class ACSController: public BaseController
 {

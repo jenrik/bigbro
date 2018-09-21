@@ -1,4 +1,12 @@
+#include <Arduino.h>
 #include "display.h"
+
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+#ifdef U8X8_HAVE_HW_I2C
+#include <Wire.h>
+#endif
 
 #define Y_1    15
 #define Y_2    30
