@@ -3,9 +3,11 @@
 #include "acsrestclient.h"
 #include "controllers/acs.h"
 
+#define SERIAL_DBG 1
+
 ACSController::ACSController(): 
   BaseController(),
-  reader(pin_rx, pin_tx, pin_switch)
+  reader(D5, 11, D6)
 {}
 
 bool ACSController::relay_check()
@@ -40,7 +42,7 @@ void ACSController::update()
 	BaseController::update();
 	led.update();
 	reader.update();
-	card_id = reader.get_card_id();    
+	card_id = reader.get_card_id();
 }
 
 bool ACSController::has_card()

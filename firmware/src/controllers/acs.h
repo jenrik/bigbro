@@ -20,8 +20,6 @@ protected:
     String last_card_id;
     String card_id;
 
-    uint8_t pin_tx = SW_SERIAL_UNUSED_PIN, pin_rx = D5, pin_switch = D6;
-
     bool has_allowed_card = false;
 
     bool has_card();
